@@ -106,8 +106,19 @@
     <div class="rodape">Licit.ai © 2025 · Suporte: carlos@licit.ai</div>
   </div>
 
-  <script type="module">
-    import { login, getDadosUsuario, verificarAcesso } from '/src/auth.js';
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    const _sb = supabase.createClient(
+      'https://cputbtpimcwgxpsmfamn.supabase.co',
+      'sb_publishable_2u7rKW4GjWSryV9MDdRGAg_xS6nxKtI'
+    );
+
+    // Se já tem sessão válida, vai direto pro app
+    _sb.auth.getUser().then(({ data, error }) => {
+      if (!error && data.user) {
+        window.location.replace('/');
+      }
+    });
 
     window.entrar = async function() {
       const email = document.getElementById('email').value.trim();
@@ -126,26 +137,56 @@
       erro.style.display = 'none';
 
       try {
-        await login(email, senha);
-        const usuario = await getDadosUsuario(email);
+        // Login
+        const { data: authData, error: authError } = await _sb.auth.signInWithPassword({ email, password: senha });
+        if (authError) throw authError;
+
+        // Busca dados do usuário
+        const { data: usuario } = await _sb.from('usuarios')
+          .select('*, organizacoes(*)')
+          .eq('email', email)
+          .single();
+
+        // Verifica acesso
         const acesso = verificarAcesso(usuario);
         if (!acesso.ok) {
+          await _sb.auth.signOut();
           erro.textContent = acesso.motivo;
           erro.style.display = 'block';
           btn.disabled = false;
           btn.textContent = 'Entrar';
           return;
         }
-        window.location.href = '/';
+
+        // Salva info do usuário no localStorage
+        localStorage.setItem('licit_usuario', JSON.stringify({
+          email: usuario.email,
+          nome: usuario.nome,
+          org: usuario.organizacoes?.nome
+        }));
+
+        window.location.replace('/');
       } catch(e) {
-        erro.textContent = 'E-mail ou senha incorretos.';
+        erro.textContent = e.message?.includes('Invalid') ? 'E-mail ou senha incorretos.' : (e.message || 'Erro ao entrar.');
         erro.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Entrar';
       }
     };
 
-    // Enter no campo senha
+    function verificarAcesso(usuario) {
+      if (!usuario) return { ok: false, motivo: 'Usuário não encontrado na base.' };
+      if (!usuario.ativo) return { ok: false, motivo: 'Usuário inativo.' };
+      const org = usuario.organizacoes;
+      if (!org) return { ok: false, motivo: 'Organização não encontrada.' };
+      if (!org.ativo) return { ok: false, motivo: 'Acesso bloqueado. Entre em contato.' };
+      if (org.plano === 'bloqueado') return { ok: false, motivo: 'Acesso suspenso por inadimplência.' };
+      if (org.validade && new Date(org.validade) < new Date()) {
+        return { ok: false, motivo: 'Período de acesso encerrado.' };
+      }
+      return { ok: true };
+    }
+
     document.getElementById('senha').addEventListener('keydown', e => {
       if (e.key === 'Enter') window.entrar();
     });
