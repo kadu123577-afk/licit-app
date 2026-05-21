@@ -1298,34 +1298,49 @@ textarea { resize: vertical; min-height: 80px; }
 </style>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- ── PROTEÇÃO DE ROTA ───────────────────────────────────────────────────── -->
+<!-- 1) Esconde a página IMEDIATAMENTE, antes de qualquer render -->
+<script>document.documentElement.style.visibility = 'hidden';</script>
+
+<!-- 2) Carrega o SDK e só executa a verificação quando ele estiver pronto (onload) -->
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+  onload="iniciarProtecaoRota()"
+  onerror="document.documentElement.style.visibility='visible'"
+></script>
+
 <script>
-// ── PROTEÇÃO DE ROTA ─────────────────────────────────────────────────────────
-document.documentElement.style.visibility = 'hidden';
-const _SUPA_URL = 'https://oputbtpimcwgxpsmfamn.supabase.co';
-const _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wdXRidHBpbW93Z3hwc21mYW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTYyMDksImV4cCI6MjA5NDkzMjIwOX0.9NtzdNnbrvVKyABlfU27RbwIg9gpbjiyG_SsWekOYoU';
-const _sb = supabase.createClient(_SUPA_URL, _SUPA_KEY);
+function iniciarProtecaoRota() {
+  const _sb = supabase.createClient(
+    'https://oputbtpimcwgxpsmfamn.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wdXRidHBpbW93Z3hwc21mYW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTYyMDksImV4cCI6MjA5NDkzMjIwOX0.9NtzdNnbrvVKyABlfU27RbwIg9gpbjiyG_SsWekOYoU'
+  );
 
-window._licitLogout = async function() {
-  await _sb.auth.signOut();
-  localStorage.removeItem('licit_usuario');
-  window.location.href = '/login.html';
-};
-
-(async () => {
-  const { data } = await _sb.auth.getSession();
-  if (!data.session) {
+  // Expõe instância e logout globalmente
+  window._sb = _sb;
+  window._licitLogout = async function() {
+    await _sb.auth.signOut();
+    localStorage.removeItem('licit_usuario');
     window.location.href = '/login.html';
-    return;
-  }
-  document.documentElement.style.visibility = 'visible';
-  const raw = localStorage.getItem('licit_usuario');
-  if (raw) {
-    const u = JSON.parse(raw);
-    const el = document.getElementById('_licit_user_info');
-    if (el) el.textContent = u.org ? `${u.nome || u.email} · ${u.org}` : (u.nome || u.email);
-  }
-})();
+  };
+
+  _sb.auth.getSession().then(({ data }) => {
+    if (!data.session) {
+      window.location.href = '/login.html';
+      return;
+    }
+    // Sessão válida: exibe a página
+    document.documentElement.style.visibility = 'visible';
+    const raw = localStorage.getItem('licit_usuario');
+    if (raw) {
+      try {
+        const u = JSON.parse(raw);
+        const el = document.getElementById('_licit_user_info');
+        if (el) el.textContent = u.org ? `${u.nome || u.email} · ${u.org}` : (u.nome || u.email);
+      } catch(e) {}
+    }
+  });
+}
 </script>
 
 <!-- ====================== HEADER ====================== -->
