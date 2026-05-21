@@ -1,13 +1,13 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/pncp/:path*",
       "destination": "https://pncp.gov.br/api/:path*"
     }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/pncp/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
