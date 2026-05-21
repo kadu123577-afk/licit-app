@@ -1296,7 +1296,36 @@ textarea { resize: vertical; min-height: 80px; }
   .hero h1 { font-size: 30px; }
 }
 </style>
-<script type="module" src="/src/main.js"></script></head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── PROTEÇÃO DE ROTA ─────────────────────────────────────────────────────────
+const _SUPA_URL = 'https://oputbtpimcwgxpsmfamn.supabase.co';
+const _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wdXRidHBpbW93Z3hwc21mYW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTYyMDksImV4cCI6MjA5NDkzMjIwOX0.9NtzdNnbrvVKyABlfU27RbwIg9gpbjiyG_SsWekOYoU';
+const _sb = supabase.createClient(_SUPA_URL, _SUPA_KEY);
+
+window._licitLogout = async function() {
+  await _sb.auth.signOut();
+  localStorage.removeItem('licit_usuario');
+  window.location.href = '/login.html';
+};
+
+(async () => {
+  const { data } = await _sb.auth.getSession();
+  if (!data.session) {
+    window.location.href = '/login.html';
+    return;
+  }
+  const raw = localStorage.getItem('licit_usuario');
+  if (raw) {
+    const u = JSON.parse(raw);
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('_licit_user_info');
+      if (el) el.textContent = u.org ? `${u.nome || u.email} · ${u.org}` : (u.nome || u.email);
+    });
+  }
+})();
+</script>
+</head>
 <body>
 
 <!-- ====================== HEADER ====================== -->
@@ -1309,6 +1338,8 @@ textarea { resize: vertical; min-height: 80px; }
     </div>
   </div>
   <div class="header-actions">
+    <span id="_licit_user_info" style="font-size:12px;color:var(--text-soft);margin-right:4px;"></span>
+    <button class="btn btn-sm" onclick="window._licitLogout()" title="Sair da plataforma" style="color:var(--red);">⏻ Sair</button>
     <button class="btn btn-sm" id="btn-ia-config" onclick="abrirConfigIA()" title="Configurar IA (DeepSeek)">🤖 IA</button>
     <button class="btn btn-sm" onclick="exportarBackup()" title="Baixar backup JSON com todas as cotações">📥 Backup</button>
     <label class="btn btn-sm" style="cursor:pointer;" title="Importar backup JSON">

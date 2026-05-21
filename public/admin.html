@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Licit.ai — Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0e1a; color: #e8edf2; font-size: 14px;
+    }
+    header {
+      background: #111827; border-bottom: 1px solid #1f2937;
+      padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark {
+      width: 32px; height: 32px; background: #00ff88; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: #000; font-size: 13px;
+    }
+    .brand-name { font-weight: 700; font-size: 16px; }
+    .badge {
+      background: #1f2937; border: 1px solid #374151;
+      color: #9ca3af; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .btn {
+      padding: 7px 14px; border-radius: 7px; border: none;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .2s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: #00ff88; color: #000; }
+    .btn-danger { background: #2d1515; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .btn-ghost { background: transparent; color: #9ca3af; border: 1px solid #374151; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    h2 { font-size: 20px; margin-bottom: 4px; }
+    .subtitle { color: #6b7280; font-size: 13px; margin-bottom: 28px; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 18px;
+    }
+    .stat-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; }
+    .stat-value.green { color: #00ff88; }
+    .stat-value.red { color: #ff5c6a; }
+    .stat-value.yellow { color: #ffc857; }
+
+    .card {
+      background: #111827; border: 1px solid #1f2937; border-radius: 10px;
+      margin-bottom: 24px; overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px; border-bottom: 1px solid #1f2937;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title { font-weight: 600; font-size: 15px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 10px 16px; text-align: left; font-size: 11px;
+      color: #6b7280; text-transform: uppercase; letter-spacing: .05em;
+      background: #0f1922; border-bottom: 1px solid #1f2937;
+    }
+    td { padding: 12px 16px; border-bottom: 1px solid #0f1922; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #0f1922; }
+
+    .pill {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .pill-green { background: rgba(0,255,136,.12); color: #00ff88; }
+    .pill-red { background: rgba(255,92,106,.12); color: #ff5c6a; }
+    .pill-yellow { background: rgba(255,200,87,.12); color: #ffc857; }
+    .pill-gray { background: rgba(156,163,175,.12); color: #9ca3af; }
+
+    .loading { text-align: center; padding: 40px; color: #4b5563; }
+    .empty { text-align: center; padding: 40px; color: #4b5563; font-size: 13px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #111827; border: 1px solid #1f2937; border-radius: 12px;
+      padding: 28px; width: 100%; max-width: 460px;
+    }
+    .modal h3 { font-size: 17px; margin-bottom: 6px; }
+    .modal p { color: #6b7280; font-size: 13px; margin-bottom: 22px; }
+    label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 5px; margin-top: 14px; }
+    label:first-of-type { margin-top: 0; }
+    input, select {
+      width: 100%; padding: 9px 12px;
+      background: #1f2937; border: 1px solid #374151;
+      border-radius: 7px; color: #fff; font-size: 13px;
+      outline: none; transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: #00ff88; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+    .erro { background: #2d1515; border: 1px solid #7f1d1d; color: #fca5a5;
+            padding: 8px 12px; border-radius: 7px; font-size: 12px; margin-top: 12px; display: none; }
+    .sucesso { background: #0d2b1e; border: 1px solid #14532d; color: #86efac;
+               padding: 8px 12px; border-radius: 7px; font-size: 12px; margin-top: 12px; display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">P</div>
+    <div>
+      <div class="brand-name">Licit.ai <span class="badge">Admin</span></div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="admin-email" style="font-size:12px;color:#6b7280;"></span>
+    <a href="/index.html" class="btn btn-ghost btn-sm">← App</a>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Sair</button>
+  </div>
+</header>
+
+<main>
+  <h2>Painel de Usuários</h2>
+  <p class="subtitle">Gerencie organizações e acessos à plataforma.</p>
+
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat-card"><div class="stat-label">Total organizações</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Ativas</div><div class="stat-value green" id="s-ativas">—</div></div>
+    <div class="stat-card"><div class="stat-label">Expiradas</div><div class="stat-value red" id="s-expiradas">—</div></div>
+    <div class="stat-card"><div class="stat-label">Usuários</div><div class="stat-value yellow" id="s-usuarios">—</div></div>
+  </div>
+
+  <!-- Organizações -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Organizações</span>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalOrg()">+ Nova organização</button>
+    </div>
+    <div id="tabela-orgs"><div class="loading">Carregando...</div></div>
+  </div>
+
+  <!-- Usuários -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Usuários</span>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalUser()">+ Novo usuário</button>
+    </div>
+    <div id="tabela-users"><div class="loading">Carregando...</div></div>
+  </div>
+</main>
+
+<!-- Modal Nova Organização -->
+<div class="modal-overlay" id="modal-org">
+  <div class="modal">
+    <h3 id="modal-org-titulo">Nova Organização</h3>
+    <p>Prefeitura ou órgão que terá acesso à plataforma.</p>
+    <input type="hidden" id="org-id">
+    <label>Nome da organização</label>
+    <input type="text" id="org-nome" placeholder="Ex: Prefeitura de Goiânia">
+    <label>Plano</label>
+    <select id="org-plano">
+      <option value="basico">Básico</option>
+      <option value="profissional">Profissional</option>
+      <option value="bloqueado">Bloqueado</option>
+    </select>
+    <label>Validade do acesso</label>
+    <input type="date" id="org-validade">
+    <label style="display:flex;align-items:center;gap:8px;flex-direction:row;margin-top:14px;">
+      <input type="checkbox" id="org-ativo" style="width:auto;" checked> Organização ativa
+    </label>
+    <div class="erro" id="org-erro"></div>
+    <div class="sucesso" id="org-sucesso"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-org')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarOrg()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Usuário -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <h3 id="modal-user-titulo">Novo Usuário</h3>
+    <p>O usuário receberá as credenciais de acesso.</p>
+    <input type="hidden" id="user-id">
+    <label>Nome completo</label>
+    <input type="text" id="user-nome" placeholder="Maria da Silva">
+    <label>E-mail</label>
+    <input type="email" id="user-email" placeholder="maria@prefeitura.gov.br">
+    <label>Senha inicial</label>
+    <input type="password" id="user-senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+    <label>Organização</label>
+    <select id="user-org"></select>
+    <label>Perfil</label>
+    <select id="user-perfil">
+      <option value="operador">Operador</option>
+      <option value="admin">Admin</option>
+    </select>
+    <div class="erro" id="user-erro"></div>
+    <div class="sucesso" id="user-sucesso"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-user')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-user" onclick="salvarUser()">Criar usuário</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://oputbtpimcwgxpsmfamn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wdXRidHBpbW93Z3hwc21mYW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTYyMDksImV4cCI6MjA5NDkzMjIwOX0.9NtzdNnbrvVKyABlfU27RbwIg9gpbjiyG_SsWekOYoU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let _orgs = [];
+
+// ── AUTENTICAÇÃO ─────────────────────────────────────────────────────────────
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (!data.session) { window.location.href = '/login.html'; return; }
+  document.getElementById('admin-email').textContent = data.session.user.email;
+  await carregarTudo();
+})();
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/login.html';
+}
+
+// ── DADOS ────────────────────────────────────────────────────────────────────
+async function carregarTudo() {
+  await Promise.all([carregarOrgs(), carregarUsers()]);
+}
+
+async function carregarOrgs() {
+  const { data, error } = await sb.from('organizacoes').select('*').order('nome');
+  if (error) { document.getElementById('tabela-orgs').innerHTML = `<div class="empty">Erro: ${error.message}</div>`; return; }
+  _orgs = data || [];
+
+  const hoje = new Date();
+  const ativas = _orgs.filter(o => o.ativo && (!o.validade || new Date(o.validade) >= hoje)).length;
+  const expiradas = _orgs.filter(o => o.validade && new Date(o.validade) < hoje).length;
+  document.getElementById('s-total').textContent = _orgs.length;
+  document.getElementById('s-ativas').textContent = ativas;
+  document.getElementById('s-expiradas').textContent = expiradas;
+
+  if (!_orgs.length) {
+    document.getElementById('tabela-orgs').innerHTML = '<div class="empty">Nenhuma organização cadastrada.</div>';
+    return;
+  }
+
+  const rows = _orgs.map(o => {
+    const exp = o.validade ? new Date(o.validade) : null;
+    const vencido = exp && exp < hoje;
+    const status = !o.ativo ? '<span class="pill pill-red">Bloqueado</span>'
+      : vencido ? '<span class="pill pill-yellow">Expirado</span>'
+      : '<span class="pill pill-green">Ativo</span>';
+    const validade = exp ? exp.toLocaleDateString('pt-BR') : '—';
+    return `<tr>
+      <td><strong>${o.nome}</strong></td>
+      <td>${o.plano || '—'}</td>
+      <td>${status}</td>
+      <td>${validade}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarOrg('${o.id}')">Editar</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tabela-orgs').innerHTML = `
+    <table>
+      <thead><tr><th>Nome</th><th>Plano</th><th>Status</th><th>Validade</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+async function carregarUsers() {
+  const { data, error } = await sb.from('usuarios').select('*, organizacoes(nome)').order('nome');
+  if (error) { document.getElementById('tabela-users').innerHTML = `<div class="empty">Erro: ${error.message}</div>`; return; }
+  const users = data || [];
+  document.getElementById('s-usuarios').textContent = users.length;
+
+  if (!users.length) {
+    document.getElementById('tabela-users').innerHTML = '<div class="empty">Nenhum usuário cadastrado.</div>';
+    return;
+  }
+
+  const rows = users.map(u => `<tr>
+    <td><strong>${u.nome || '—'}</strong></td>
+    <td>${u.email}</td>
+    <td>${u.organizacoes?.nome || '—'}</td>
+    <td><span class="pill ${u.perfil === 'admin' ? 'pill-yellow' : 'pill-gray'}">${u.perfil || 'operador'}</span></td>
+  </tr>`).join('');
+
+  document.getElementById('tabela-users').innerHTML = `
+    <table>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Organização</th><th>Perfil</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── MODAL ORGANIZAÇÃO ────────────────────────────────────────────────────────
+function abrirModalOrg() {
+  document.getElementById('modal-org-titulo').textContent = 'Nova Organização';
+  document.getElementById('org-id').value = '';
+  document.getElementById('org-nome').value = '';
+  document.getElementById('org-plano').value = 'basico';
+  document.getElementById('org-validade').value = '';
+  document.getElementById('org-ativo').checked = true;
+  document.getElementById('org-erro').style.display = 'none';
+  document.getElementById('org-sucesso').style.display = 'none';
+  document.getElementById('modal-org').classList.add('show');
+}
+
+function editarOrg(id) {
+  const o = _orgs.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('modal-org-titulo').textContent = 'Editar Organização';
+  document.getElementById('org-id').value = o.id;
+  document.getElementById('org-nome').value = o.nome;
+  document.getElementById('org-plano').value = o.plano || 'basico';
+  document.getElementById('org-validade').value = o.validade ? o.validade.slice(0, 10) : '';
+  document.getElementById('org-ativo').checked = !!o.ativo;
+  document.getElementById('org-erro').style.display = 'none';
+  document.getElementById('org-sucesso').style.display = 'none';
+  document.getElementById('modal-org').classList.add('show');
+}
+
+async function salvarOrg() {
+  const id = document.getElementById('org-id').value;
+  const nome = document.getElementById('org-nome').value.trim();
+  const plano = document.getElementById('org-plano').value;
+  const validade = document.getElementById('org-validade').value || null;
+  const ativo = document.getElementById('org-ativo').checked;
+  const erroEl = document.getElementById('org-erro');
+  const okEl = document.getElementById('org-sucesso');
+
+  if (!nome) { erroEl.textContent = 'Informe o nome da organização.'; erroEl.style.display = 'block'; return; }
+  erroEl.style.display = 'none';
+
+  const payload = { nome, plano, validade, ativo };
+  let error;
+  if (id) {
+    ({ error } = await sb.from('organizacoes').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sb.from('organizacoes').insert(payload));
+  }
+
+  if (error) { erroEl.textContent = error.message; erroEl.style.display = 'block'; return; }
+
+  okEl.textContent = id ? 'Organização atualizada!' : 'Organização criada!';
+  okEl.style.display = 'block';
+  setTimeout(() => { fecharModal('modal-org'); carregarOrgs(); }, 1000);
+}
+
+// ── MODAL USUÁRIO ────────────────────────────────────────────────────────────
+function abrirModalUser() {
+  document.getElementById('modal-user-titulo').textContent = 'Novo Usuário';
+  document.getElementById('user-id').value = '';
+  document.getElementById('user-nome').value = '';
+  document.getElementById('user-email').value = '';
+  document.getElementById('user-senha').value = '';
+  document.getElementById('user-perfil').value = 'operador';
+  document.getElementById('user-erro').style.display = 'none';
+  document.getElementById('user-sucesso').style.display = 'none';
+  document.getElementById('btn-salvar-user').textContent = 'Criar usuário';
+
+  // Preenche select de orgs
+  const sel = document.getElementById('user-org');
+  sel.innerHTML = _orgs.map(o => `<option value="${o.id}">${o.nome}</option>`).join('');
+  document.getElementById('modal-user').classList.add('show');
+}
+
+async function salvarUser() {
+  const nome = document.getElementById('user-nome').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const senha = document.getElementById('user-senha').value;
+  const orgId = document.getElementById('user-org').value;
+  const perfil = document.getElementById('user-perfil').value;
+  const erroEl = document.getElementById('user-erro');
+  const okEl = document.getElementById('user-sucesso');
+  const btn = document.getElementById('btn-salvar-user');
+
+  if (!nome || !email || !senha) { erroEl.textContent = 'Preencha todos os campos.'; erroEl.style.display = 'block'; return; }
+  if (senha.length < 8) { erroEl.textContent = 'Senha deve ter ao menos 8 caracteres.'; erroEl.style.display = 'block'; return; }
+  erroEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Criando...';
+
+  // Cria na autenticação do Supabase
+  const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
+  if (authErr) {
+    erroEl.textContent = authErr.message; erroEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Criar usuário'; return;
+  }
+
+  // Insere na tabela usuarios
+  const { error: dbErr } = await sb.from('usuarios').insert({
+    id: authData.user?.id,
+    nome, email,
+    organizacao_id: orgId,
+    perfil
+  });
+
+  if (dbErr) {
+    erroEl.textContent = dbErr.message; erroEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Criar usuário'; return;
+  }
+
+  okEl.textContent = `Usuário ${email} criado com sucesso!`;
+  okEl.style.display = 'block';
+  btn.disabled = false; btn.textContent = 'Criar usuário';
+  setTimeout(() => { fecharModal('modal-user'); carregarUsers(); }, 1500);
+}
+
+// ── UTILITÁRIOS ──────────────────────────────────────────────────────────────
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+</script>
+</body>
+</html>
