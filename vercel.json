@@ -3,11 +3,15 @@
     {
       "source": "/api/pncp/:path*",
       "destination": "https://pncp.gov.br/api/:path*"
+    },
+    {
+      "source": "/api/search",
+      "destination": "https://pncp.gov.br/api/search"
     }
   ],
   "headers": [
     {
-      "source": "/api/pncp/(.*)",
+      "source": "/api/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
