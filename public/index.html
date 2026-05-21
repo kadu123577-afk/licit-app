@@ -1299,10 +1299,19 @@ textarea { resize: vertical; min-height: 80px; }
 </head>
 <body>
 <!-- ── PROTEÇÃO DE ROTA ───────────────────────────────────────────────────── -->
-<!-- 1) Esconde a página IMEDIATAMENTE, antes de qualquer render -->
-<script>document.documentElement.style.visibility = 'hidden';</script>
+<!-- 1) Checagem SÍNCRONA: redireciona antes de qualquer render se não há token -->
+<script>
+  (function() {
+    var token = localStorage.getItem('sb-oputbtpimcwgxpsmfamn-auth-token');
+    if (!token) {
+      window.location.replace('/login.html');
+    } else {
+      document.documentElement.style.visibility = 'hidden';
+    }
+  })();
+</script>
 
-<!-- 2) Carrega o SDK e só executa a verificação quando ele estiver pronto (onload) -->
+<!-- 2) Carrega o SDK e valida o token no servidor (captura tokens expirados) -->
 <script
   src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
   onload="iniciarProtecaoRota()"
@@ -1316,7 +1325,6 @@ function iniciarProtecaoRota() {
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wdXRidHBpbW93Z3hwc21mYW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTYyMDksImV4cCI6MjA5NDkzMjIwOX0.9NtzdNnbrvVKyABlfU27RbwIg9gpbjiyG_SsWekOYoU'
   );
 
-  // Expõe instância e logout globalmente
   window._sb = _sb;
   window._licitLogout = async function() {
     await _sb.auth.signOut();
@@ -1326,10 +1334,9 @@ function iniciarProtecaoRota() {
 
   _sb.auth.getUser().then(({ data, error }) => {
     if (error || !data.user) {
-      window.location.href = '/login.html';
+      window.location.replace('/login.html');
       return;
     }
-    // Sessão válida: exibe a página
     document.documentElement.style.visibility = 'visible';
     const raw = localStorage.getItem('licit_usuario');
     if (raw) {
