@@ -1324,8 +1324,8 @@ function iniciarProtecaoRota() {
     window.location.href = '/login.html';
   };
 
-  _sb.auth.getSession().then(({ data }) => {
-    if (!data.session) {
+  _sb.auth.getUser().then(({ data, error }) => {
+    if (error || !data.user) {
       window.location.href = '/login.html';
       return;
     }
