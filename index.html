@@ -1302,7 +1302,7 @@ textarea { resize: vertical; min-height: 80px; }
 <!-- 1) Checagem SÍNCRONA: redireciona antes de qualquer render se não há token -->
 <script>
   (function() {
-    var token = localStorage.getItem('sb-oputbtpimcwgxpsmfamn-auth-token');
+    var token = localStorage.getItem('sb-oputbtpimowgxpsmfamn-auth-token');
     if (!token) {
       window.location.replace('/login.html');
     } else {
@@ -1321,7 +1321,7 @@ textarea { resize: vertical; min-height: 80px; }
 <script>
 function iniciarProtecaoRota() {
   const _sb = supabase.createClient(
-    'https://oputbtpimcwgxpsmfamn.supabase.co',
+    'https://oputbtpimowgxpsmfamn.supabase.co',
     'sb_publishable_2u7rKW4GjWSryV9MDdRGAg_xS6nxKtI'
   );
 
