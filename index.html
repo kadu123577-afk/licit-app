@@ -1299,56 +1299,52 @@ textarea { resize: vertical; min-height: 80px; }
 </head>
 <body>
 <!-- ── PROTEÇÃO DE ROTA ───────────────────────────────────────────────────── -->
-<!-- 1) Checagem SÍNCRONA: redireciona antes de qualquer render se não há token -->
 <script>
-  (function() {
+  // 1) Esconde imediatamente
+  document.documentElement.style.visibility = 'hidden';
+
+  // 2) Define a função ANTES de carregar o CDN
+  window.iniciarProtecaoRota = function() {
+    var _sb = supabase.createClient(
+      'https://oputbtpimowgxpsmfamn.supabase.co',
+      'sb_publishable_2u7rKW4GjWSryV9MDdRGAg_xS6nxKtI'
+    );
+    window._sb = _sb;
+    window._licitLogout = async function() {
+      await _sb.auth.signOut();
+      localStorage.removeItem('licit_usuario');
+      window.location.href = '/login.html';
+    };
+    // 3) Checagem síncrona por token
     var token = localStorage.getItem('sb-oputbtpimowgxpsmfamn-auth-token');
     if (!token) {
       window.location.replace('/login.html');
-    } else {
-      document.documentElement.style.visibility = 'hidden';
-    }
-  })();
-</script>
-
-<!-- 2) Carrega o SDK e valida o token no servidor (captura tokens expirados) -->
-<script
-  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
-  onload="iniciarProtecaoRota()"
-  onerror="document.documentElement.style.visibility='visible'"
-></script>
-
-<script>
-function iniciarProtecaoRota() {
-  const _sb = supabase.createClient(
-    'https://oputbtpimowgxpsmfamn.supabase.co',
-    'sb_publishable_2u7rKW4GjWSryV9MDdRGAg_xS6nxKtI'
-  );
-
-  window._sb = _sb;
-  window._licitLogout = async function() {
-    await _sb.auth.signOut();
-    localStorage.removeItem('licit_usuario');
-    window.location.href = '/login.html';
-  };
-
-  _sb.auth.getUser().then(({ data, error }) => {
-    if (error || !data.user) {
-      window.location.replace('/login.html');
       return;
     }
-    document.documentElement.style.visibility = 'visible';
-    const raw = localStorage.getItem('licit_usuario');
-    if (raw) {
-      try {
-        const u = JSON.parse(raw);
-        const el = document.getElementById('_licit_user_info');
-        if (el) el.textContent = u.org ? `${u.nome || u.email} · ${u.org}` : (u.nome || u.email);
-      } catch(e) {}
-    }
-  });
-}
+    // 4) Valida token no servidor
+    _sb.auth.getUser().then(function(res) {
+      if (res.error || !res.data.user) {
+        window.location.replace('/login.html');
+        return;
+      }
+      document.documentElement.style.visibility = 'visible';
+      var raw = localStorage.getItem('licit_usuario');
+      if (raw) {
+        try {
+          var u = JSON.parse(raw);
+          var el = document.getElementById('_licit_user_info');
+          if (el) el.textContent = u.org ? (u.nome || u.email) + ' · ' + u.org : (u.nome || u.email);
+        } catch(e) {}
+      }
+    });
+  };
 </script>
+<!-- 5) Carrega o SDK e dispara a proteção -->
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"
+  onload="window.iniciarProtecaoRota()"
+  onerror="document.documentElement.style.visibility='visible'"
+></script>
 
 <!-- ====================== HEADER ====================== -->
 <header class="app-header">
