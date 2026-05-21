@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Licit.ai — Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -23,12 +24,7 @@
       width: 100%;
       max-width: 400px;
     }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 32px;
-    }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
     .logo-icon {
       width: 36px; height: 36px;
       background: #00ff88;
@@ -42,48 +38,28 @@
     p { color: #6b7280; font-size: 14px; margin-bottom: 28px; }
     label { display: block; font-size: 13px; color: #9ca3af; margin-bottom: 6px; }
     input {
-      width: 100%;
-      padding: 10px 14px;
-      background: #1f2937;
-      border: 1px solid #374151;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-      margin-bottom: 16px;
-      outline: none;
-      transition: border-color .2s;
+      width: 100%; padding: 10px 14px;
+      background: #1f2937; border: 1px solid #374151;
+      border-radius: 8px; color: #fff; font-size: 14px;
+      margin-bottom: 16px; outline: none; transition: border-color .2s;
     }
     input:focus { border-color: #00ff88; }
     button {
-      width: 100%;
-      padding: 12px;
-      background: #00ff88;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity .2s;
+      width: 100%; padding: 12px;
+      background: #00ff88; color: #000;
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s;
     }
     button:hover { opacity: .9; }
     button:disabled { opacity: .5; cursor: not-allowed; }
     .erro {
-      background: #2d1515;
-      border: 1px solid #7f1d1d;
-      color: #fca5a5;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
+      background: #2d1515; border: 1px solid #7f1d1d;
+      color: #fca5a5; padding: 10px 14px;
+      border-radius: 8px; font-size: 13px;
+      margin-bottom: 16px; display: none;
     }
-    .rodape {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 12px;
-      color: #4b5563;
-    }
+    .rodape { text-align: center; margin-top: 24px; font-size: 12px; color: #4b5563; }
   </style>
 </head>
 <body>
@@ -106,10 +82,12 @@
     <div class="rodape">Licit.ai © 2025 · Suporte: carlos@licit.ai</div>
   </div>
 
-  <script type="module">
-    import { login, getDadosUsuario, verificarAcesso } from '/src/auth.js';
+  <script>
+    const SUPABASE_URL = 'https://cputbtpimcwgxpsmfamn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_2u7rKW4GjWSryV9MDdRGAg_xS6nxKtI';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    window.entrar = async function() {
+    async function entrar() {
       const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value;
       const btn = document.getElementById('btn-entrar');
@@ -126,28 +104,46 @@
       erro.style.display = 'none';
 
       try {
-        await login(email, senha);
-        const usuario = await getDadosUsuario(email);
-        const acesso = verificarAcesso(usuario);
-        if (!acesso.ok) {
-          erro.textContent = acesso.motivo;
-          erro.style.display = 'block';
-          btn.disabled = false;
-          btn.textContent = 'Entrar';
-          return;
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+        if (error) throw error;
+
+        // Verifica acesso no banco
+        const { data: usuario } = await sb
+          .from('usuarios')
+          .select('*, organizacoes(*)')
+          .eq('email', email)
+          .single();
+
+        if (!usuario) throw new Error('Usuário não cadastrado na plataforma.');
+
+        const org = usuario.organizacoes;
+        if (!org || !org.ativo || org.plano === 'bloqueado') {
+          throw new Error('Acesso bloqueado. Entre em contato.');
         }
+        if (org.validade && new Date(org.validade) < new Date()) {
+          throw new Error('Período de acesso encerrado.');
+        }
+
+        // Salva info do usuário e redireciona
+        localStorage.setItem('licit_usuario', JSON.stringify({ email, nome: usuario.nome, org: org.nome }));
         window.location.href = '/';
       } catch(e) {
-        erro.textContent = 'E-mail ou senha incorretos.';
+        erro.textContent = e.message === 'Invalid login credentials'
+          ? 'E-mail ou senha incorretos.'
+          : (e.message || 'Erro ao entrar.');
         erro.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Entrar';
       }
-    };
+    }
 
-    // Enter no campo senha
     document.getElementById('senha').addEventListener('keydown', e => {
-      if (e.key === 'Enter') window.entrar();
+      if (e.key === 'Enter') entrar();
+    });
+
+    // Se já logado, redireciona
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = '/';
     });
   </script>
 </body>
