@@ -3410,17 +3410,17 @@ async function buscarContratacoes(query, uf, pagina = 1, tipoDoc = 'edital', mes
 // Busca itens de uma contratação específica
 // Tenta os dois formatos de URL conhecidos do PNCP
 async function buscarItensContratacao(cnpj, ano, sequencial) {
+  // urlOrgaos é o formato que funciona na API atual do PNCP
+  const urlOrgaos = `${PNCP_BASE}/api/pncp/v1/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens?pagina=1&tamanhoPagina=500`;
   const urlNova = `${PNCP_BASE}/api/pncp/v1/contratacoes/${cnpj}/${ano}/${sequencial}/itens?pagina=1&tamanhoPagina=500`;
-  const urlAntiga = `${PNCP_BASE}/api/pncp/v1/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens?pagina=1&tamanhoPagina=500`;
 
-  // 404 é terminal — não tenta URL alternativa nem faz retry (economiza ~50% das chamadas)
   let resp = null;
-  try { resp = await fetchComRetry(urlNova, 1); } catch(e) {
-    // ERR_CONNECTION_REFUSED = proxy caído; aborta imediatamente
+  // Tenta formato /orgaos/ primeiro (confirmado funcional)
+  try { resp = await fetchComRetry(urlOrgaos, 1); } catch(e) {
     if (e.name === 'TypeError' || e.message?.includes('ERR_CONNECTION_REFUSED')) throw e;
   }
   if (!resp) {
-    try { resp = await fetchComRetry(urlAntiga, 1); } catch(e) {
+    try { resp = await fetchComRetry(urlNova, 1); } catch(e) {
       if (e.name === 'TypeError' || e.message?.includes('ERR_CONNECTION_REFUSED')) throw e;
     }
   }
@@ -3435,15 +3435,16 @@ async function buscarItensContratacao(cnpj, ano, sequencial) {
 }
 
 async function buscarResultadosItem(cnpj, ano, sequencial, numeroItem) {
+  const urlOrgaos2 = `${PNCP_BASE}/api/pncp/v1/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens/${numeroItem}/resultados`;
   const urlNova = `${PNCP_BASE}/api/pncp/v1/contratacoes/${cnpj}/${ano}/${sequencial}/itens/${numeroItem}/resultados`;
-  const urlAntiga = `${PNCP_BASE}/api/pncp/v1/orgaos/${cnpj}/compras/${ano}/${sequencial}/itens/${numeroItem}/resultados`;
   try {
     let resp = null;
-    try { resp = await fetchComRetry(urlNova, 1); } catch(e) {
+    // Tenta /orgaos/ primeiro
+    try { resp = await fetchComRetry(urlOrgaos2, 1); } catch(e) {
       if (e.name === 'TypeError' || e.message?.includes('ERR_CONNECTION_REFUSED')) throw e;
     }
     if (!resp) {
-      try { resp = await fetchComRetry(urlAntiga, 1); } catch(e) {
+      try { resp = await fetchComRetry(urlNova, 1); } catch(e) {
         if (e.name === 'TypeError' || e.message?.includes('ERR_CONNECTION_REFUSED')) throw e;
       }
     }
