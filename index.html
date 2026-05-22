@@ -18,6 +18,10 @@
   --bg: #050A0F;
   --surface: #0B1218;
   --surface-2: #0F1922;
+  --surface-3: var(--surface-3);
+  --surface-hover: #1a2530;
+  --surface-alt: #1a1d23;
+  --surface-accent: #1C2E3E;
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.14);
   --text: #E8EDF2;
@@ -25,6 +29,7 @@
   --text-muted: #566470;
   --green: #41F36A;
   --green-dark: #28C94E;
+  --green-light: var(--green-light);
   --green-soft: rgba(65,243,106,0.10);
   --gold: #FFC857;
   --gold-soft: rgba(255,200,87,0.10);
@@ -36,7 +41,7 @@
   --orange-soft: rgba(255,140,66,0.12);
   --purple: #A87EFF;
   --purple-soft: rgba(168,126,255,0.12);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.25), 0 1px 1px rgba(0,0,0,.18);
+  --gradient-brand: linear-gradient(135deg, #41F36A 0%, #14D9B5 50%, #1AB8FF 100%);
   --shadow: 0 4px 12px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.25);
   --shadow-lg: 0 12px 32px rgba(0,0,0,.50), 0 2px 8px rgba(0,0,0,.35);
   --radius: 10px;
@@ -81,7 +86,7 @@ h1, h2, h3, h4, .display, .value {
 }
 .brand-mark {
   width: 38px; height: 38px;
-  background: linear-gradient(135deg, #41F36A 0%, #14D9B5 50%, #1AB8FF 100%);
+  background: var(--gradient-brand);
   border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
   color: white;
@@ -143,17 +148,17 @@ h1, h2, h3, h4, .display, .value {
 .btn-primary {
   background: var(--green);
   border-color: var(--green-dark);
-  color: #050A0F;
+  color: var(--bg);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(65,243,106,.20);
 }
-.btn-primary:hover:not(:disabled) { background: #5BFF82; border-color: var(--green); }
+.btn-primary:hover:not(:disabled) { background: var(--green-light); border-color: var(--green); }
 .btn-secondary {
   background: var(--text);
   border-color: var(--text);
   color: white;
 }
-.btn-secondary:hover:not(:disabled) { background: #1a2530; }
+.btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
 .btn-danger {
   background: var(--surface);
   border-color: var(--red);
@@ -216,7 +221,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 /* ===== HERO / PAINEL INICIAL ===== */
 .hero {
-  background: linear-gradient(135deg, #0B1218 0%, #0F1A26 100%);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-3) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 48px;
@@ -440,7 +445,7 @@ textarea { resize: vertical; min-height: 80px; }
   top: 90px;
 }
 .search-header-card {
-  background: linear-gradient(135deg, #0B1218 0%, #0F1922 100%);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
   color: white;
   border-radius: var(--radius-lg);
   padding: 28px;
@@ -926,7 +931,7 @@ textarea { resize: vertical; min-height: 80px; }
 .report-table tr:nth-child(even) td { background: var(--surface-2); }
 .report-table .num, .report-table .money { text-align: right; font-family: 'DM Mono', monospace; }
 .report-table .total-row td {
-  background: #1a1d23 !important;
+  background: var(--surface-alt) !important;
   color: white;
   font-weight: 700;
   font-size: 13px;
@@ -1137,7 +1142,7 @@ textarea { resize: vertical; min-height: 80px; }
   font-size: 11px; color: var(--text-muted); margin-top: 5px;
 }
 .toast {
-  background: #1C2E3E;
+  background: var(--surface-accent);
   color: var(--text);
   padding: 12px 18px;
   border-radius: var(--radius-sm);
@@ -1307,7 +1312,7 @@ textarea { resize: vertical; min-height: 80px; }
   window.iniciarProtecaoRota = function() {
     var _sb = supabase.createClient(
       'https://oputbtpimowgxpsmfamn.supabase.co',
-      'sb_publishable_2u7rKW4GjWSryV9MDdRGAg_xS6nxKtI'
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wdXRidHBpbW93Z3hwc21mYW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNTYyMDksImV4cCI6MjA5NDkzMjIwOX0.9NtzdNnbrvVKyABlfU27RbwIg9gpbjiyG_SsWekOYoU'
     );
     window._sb = _sb;
     window._licitLogout = async function() {
@@ -1415,7 +1420,7 @@ textarea { resize: vertical; min-height: 80px; }
           • <strong>2 colunas do Excel</strong> (Descrição + Quantidade): selecione as colunas B e D e cole aqui<br>
           • <strong>3 colunas</strong> (Descrição + Unidade + Quantidade): também funciona<br>
           • <strong>Só descrição</strong>: uma por linha, sem separador<br>
-          Separadores aceitos: <code style="background:#0F1922;padding:1px 5px;border-radius:3px;">TAB</code> (Excel), <code style="background:#0F1922;padding:1px 5px;border-radius:3px;">|</code> ou <code style="background:#0F1922;padding:1px 5px;border-radius:3px;">;</code>
+          Separadores aceitos: <code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;">TAB</code> (Excel), <code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;">|</code> ou <code style="background:var(--surface-2);padding:1px 5px;border-radius:3px;">;</code>
         </div>
       </div>
       <div style="display:flex; gap:12px; margin-bottom:12px; align-items:flex-end; flex-wrap:wrap;">
@@ -1526,7 +1531,7 @@ textarea { resize: vertical; min-height: 80px; }
         <span>ℹ</span>
         <div style="font-size:12.5px;">
           Sua chave fica salva <strong>só no seu navegador</strong> (localStorage) e é enviada apenas para a API da DeepSeek.
-          Obtenha gratuitamente em <a href="https://console.groq.com" target="_blank" rel="noopener" style="color:var(--blue);">console.groq.com</a>.
+          Obtenha em <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener" style="color:var(--blue);">platform.deepseek.com</a>.
         </div>
       </div>
       <div class="field">
@@ -1618,7 +1623,7 @@ let state = {
 
 const IA_KEY_STORAGE = 'pncp_groq_api_key';
 const IA_MODEL_STORAGE = 'pncp_groq_model';
-const GROQ_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
+const IA_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
 
 function getApiKeyIA() {
   return localStorage.getItem(IA_KEY_STORAGE) || '';
@@ -1720,14 +1725,14 @@ Responda APENAS com JSON válido, sem explicações fora do JSON:
 {"numeroItem": <número do item ou null>, "scoreIA": <0.0 a 1.0>, "justificativa": "<uma linha curta explicando a escolha ou por que rejeitou>"}`;
 
   try {
-    const data = await chamarGroq({ max_tokens: 200, temperature: 0, messages: [{ role: 'user', content: prompt }] });
+    const data = await chamarIA({ max_tokens: 200, temperature: 0, messages: [{ role: 'user', content: prompt }] });
     if (!data) return null;
     const texto = data?.choices?.[0]?.message?.content || '';
     const match = texto.match(/\{[\s\S]*\}/);
     if (!match) return null;
     const resultado = JSON.parse(match[0]);
     if (!resultado.numeroItem) {
-      console.log(`IA rejeitou todos os itens: ${resultado.justificativa}`);
+
       return null;
     }
     return {
@@ -1736,7 +1741,7 @@ Responda APENAS com JSON válido, sem explicações fora do JSON:
       justificativa: resultado.justificativa || ''
     };
   } catch (e) {
-    console.warn('Erro ao chamar IA DeepSeek:', e.message);
+
     return null;
   }
 }
@@ -1779,7 +1784,7 @@ Responda APENAS com JSON válido, sem markdown:
 {"termos": ["t1","t2","t3","t4","t5","t6","t7","t8"], "principal": "t1 repetido aqui"}`;
 
   try {
-    const data = await chamarGroq({ max_tokens: 500, temperature: 0.1, messages: [{ role: 'user', content: prompt }] });
+    const data = await chamarIA({ max_tokens: 500, temperature: 0.1, messages: [{ role: 'user', content: prompt }] });
     if (!data) return null;
     const texto = data?.choices?.[0]?.message?.content || '';
     const match = texto.match(/\{[\s\S]*\}/);
@@ -1790,7 +1795,7 @@ Responda APENAS com JSON válido, sem markdown:
     resultado.principal = String(resultado.principal || resultado.termos[0] || '').trim();
     return resultado;
   } catch (e) {
-    console.warn('Erro ao gerar termos com IA:', e.message);
+
     return null;
   }
 }
@@ -2030,7 +2035,7 @@ async function carregarStatusBaseLocal() {
     state.baseLocal.ultimoSync = await lerMeta('ultimoSync');
     state.baseLocal.totalContratacoes = await contarContratacoes();
   } catch (e) {
-    console.warn('IndexedDB indisponível:', e);
+
   }
 }
 
@@ -2117,7 +2122,7 @@ async function executarSincronizacao() {
     }, 500);
   } catch (e) {
     clearInterval(tempoTimer);
-    console.error('Erro na sync:', e);
+
     document.getElementById('sync-status').textContent = '✕ Erro na sincronização';
     document.getElementById('sync-substatus').textContent = e.message || 'Erro desconhecido';
     document.getElementById('sync-cancel-btn').style.display = 'none';
@@ -2143,7 +2148,7 @@ function carregarEstado() {
       state.cotacoes = data.cotacoes || [];
     }
   } catch (e) {
-    console.error('Erro ao carregar estado:', e);
+
   }
 }
 
@@ -2440,11 +2445,11 @@ function renderHome() {
       <span style="font-size:18px;">⚠</span>
       <div>
         <strong>Atenção: a busca no PNCP NÃO vai funcionar deste jeito.</strong><br>
-        Você abriu o arquivo via duplo-clique (protocolo <code style="background:#0F1922;padding:2px 6px;border-radius:3px;">file://</code>). Os navegadores bloqueiam chamadas a APIs externas por segurança quando o arquivo é aberto assim.<br><br>
+        Você abriu o arquivo via duplo-clique (protocolo <code style="background:var(--surface-2);padding:2px 6px;border-radius:3px;">file://</code>). Os navegadores bloqueiam chamadas a APIs externas por segurança quando o arquivo é aberto assim.<br><br>
         <strong>Como resolver (faz uma vez só):</strong><br>
-        1. Salve o arquivo <code style="background:#0F1922;padding:2px 6px;border-radius:3px;">iniciar-servidor.bat</code> (que veio junto) na <strong>mesma pasta</strong> deste HTML.<br>
-        2. Dê duplo-clique no <code style="background:#0F1922;padding:2px 6px;border-radius:3px;">iniciar-servidor.bat</code>. Vai abrir uma janela preta e o navegador no endereço correto.<br>
-        3. Pronto. Sempre que quiser usar, abra pelo <code style="background:#0F1922;padding:2px 6px;border-radius:3px;">iniciar-servidor.bat</code>, não pelo arquivo HTML direto.<br><br>
+        1. Salve o arquivo <code style="background:var(--surface-2);padding:2px 6px;border-radius:3px;">iniciar-servidor.bat</code> (que veio junto) na <strong>mesma pasta</strong> deste HTML.<br>
+        2. Dê duplo-clique no <code style="background:var(--surface-2);padding:2px 6px;border-radius:3px;">iniciar-servidor.bat</code>. Vai abrir uma janela preta e o navegador no endereço correto.<br>
+        3. Pronto. Sempre que quiser usar, abra pelo <code style="background:var(--surface-2);padding:2px 6px;border-radius:3px;">iniciar-servidor.bat</code>, não pelo arquivo HTML direto.<br><br>
         <button class="btn btn-sm" onclick="testarConexaoPNCP()">🔌 Testar conexão com PNCP agora</button>
         <div id="diagnostico-resultado" style="margin-top:10px;"></div>
       </div>
@@ -2520,7 +2525,7 @@ function renderHome() {
   }
 
   html += `
-      <div class="card mt-32" style="background:linear-gradient(135deg,#0B1218 0%,#0F1922 100%);">
+      <div class="card mt-32" style="background:linear-gradient(135deg,var(--surface) 0%,var(--surface-2) 100%);">
         <h3 class="section-title" style="font-size:15px;">Como funciona</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:14px;">
           <div>
@@ -2748,7 +2753,7 @@ function renderCotacao(id) {
       </div>
 
       ${itens.length > 0 ? `
-      <div class="card" style="background:linear-gradient(135deg,#0B1218 0%,#0F1922 100%);">
+      <div class="card" style="background:linear-gradient(135deg,var(--surface) 0%,var(--surface-2) 100%);">
         <div class="flex-between">
           <div>
             <div class="text-small text-soft" style="text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Valor Global Estimado</div>
@@ -3516,9 +3521,6 @@ async function sincronizarBaseLocal(opcoes = {}) {
     mesesRestantes -= chunk;
   }
 
-  console.group('🔄 Sync base local PNCP');
-  console.log(`Períodos: ${periodos.length}`, periodos);
-  console.log(`Modalidades: ${modalidadesSync.join(', ')}`);
 
   // Buffer de contratações pra salvar em lote (mais rápido que 1 por 1)
   let bufferSalvar = [];
@@ -3537,7 +3539,7 @@ async function sincronizarBaseLocal(opcoes = {}) {
       return { fim: resp.data.length < 50, count: resp.data.length };
     } catch (e) {
       totalErros++;
-      console.warn(`  ⚠ Erro pág ${pag} mod ${mod}:`, e.message);
+
       return { fim: false, count: 0, erro: true };
     }
   };
@@ -3596,8 +3598,7 @@ async function sincronizarBaseLocal(opcoes = {}) {
   state.baseLocal.totalContratacoes = await contarContratacoes();
   state.baseLocal.sincronizando = false;
 
-  console.log(`✓ Sync concluído em ${segundos}s — ${totalSalvo} contratações salvas, ${totalErros} erros`);
-  console.groupEnd();
+
 
   return {
     totalSalvo,
@@ -3705,8 +3706,6 @@ async function executarBuscaOpcaoB() {
   const MAX_PAGINAS = 5;
 
   const t0 = performance.now();
-  console.group('🚀 Busca nova API /api/search');
-  console.log('Queries:', queriesParaBuscar);
 
   try {
     const candidatas = [];
@@ -3714,7 +3713,6 @@ async function executarBuscaOpcaoB() {
 
     for (const query of queriesParaBuscar) {
       if (state.busca.abortar) break;
-      console.log(`🔍 Buscando: "${query}"`);
 
       for (const tipoDoc of ['edital', 'ata']) {
         if (state.busca.abortar) break;
@@ -3730,7 +3728,7 @@ async function executarBuscaOpcaoB() {
           try {
             resp = await buscarContratacoes(query, uf, pagAtual, tipoDoc, meses);
           } catch(e) {
-            console.warn(`  ⚠ Erro pág ${pagAtual}:`, e.message);
+
             break;
           }
 
@@ -3753,12 +3751,11 @@ async function executarBuscaOpcaoB() {
     }
 
     const totalAnalisadas = vistos.size;
-    console.log(`📊 Total: ${totalAnalisadas} únicas, ${candidatas.length} candidatas`);
 
     if (candidatas.length === 0) {
       document.getElementById('progress-area').classList.remove('show');
       mostrarSemResultados(totalAnalisadas, 0, 0);
-      console.groupEnd();
+
       return;
     }
 
@@ -3819,8 +3816,7 @@ async function executarBuscaOpcaoB() {
 
     document.getElementById('progress-area').classList.remove('show');
     const segundos = ((performance.now() - t0) / 1000).toFixed(1);
-    console.log(`⏱ Etapa 1 concluída em ${segundos}s — ${state.resultadosBusca.length} cards prontos`);
-    console.groupEnd();
+
 
     renderResultadosFinais();
     const msgTermos = queriesParaBuscar.length > 1 ? ` (${queriesParaBuscar.length} termos)` : '';
@@ -3828,8 +3824,8 @@ async function executarBuscaOpcaoB() {
     carregarTopN(20);
 
   } catch (e) {
-    console.error(e);
-    console.groupEnd();
+
+
     document.getElementById('progress-area').classList.remove('show');
     document.getElementById('results-area').innerHTML = `
       <div class="alert alert-error">
@@ -3913,12 +3909,12 @@ async function carregarPrecosDe(idResultado) {
             if (avaliacao.scoreIA >= 0.30) {
               it = itIA;
               it._aprovadoPorIA = true; // A4 — relaxa threshold na seleção automática
-              console.log(`✓ IA escolheu item [${avaliacao.numeroItem}] score=${avaliacao.scoreIA} — ${avaliacao.justificativa}`);
+
             }
           }
         }
       } catch (e) {
-        console.warn('IA falhou, usando fallback por palavras-chave:', e.message);
+
       }
     }
 
@@ -3993,7 +3989,7 @@ async function carregarPrecosDe(idResultado) {
         const fator = ratioAbsoluto > 1
           ? `${ratioAbsoluto.toFixed(0)}× maior`
           : `${(1 / ratioAbsoluto).toFixed(0)}× menor`;
-        console.log(`[VETO PREÇO] ${fmtMoeda(mediana)} é ${fator} que referência ${fmtMoeda(precoEsperadoRef)} — descartado: "${(it._descricaoResolvida||'').slice(0,60)}"`);
+
         r.statusPrecos = 'vazio';
         r._vetadoPrecoGlobal = true;
         r.mensagemErro = `Preço ${fmtMoeda(mediana)} é ${fator} que itens similares — possível lote/pacote descartado`;
@@ -4015,7 +4011,7 @@ async function carregarPrecosDe(idResultado) {
     return true;
 
   } catch (e) {
-    console.error('Erro carregando preços:', e);
+
     r.statusPrecos = 'erro';
     r.mensagemErro = e.message || 'Erro de conexão';
     atualizarCardUnico(r);
@@ -4082,11 +4078,11 @@ const _scoreCache = new Map();
 let _iaRateLimited = false;
 
 // Wrapper para chamadas à Groq com gestão de rate limit
-async function chamarGroq(body) {
+async function chamarIA(body) {
   if (_iaRateLimited) throw new Error('DeepSeek temporariamente desabilitada (rate limit)');
   const key = getApiKeyIA();
   if (!key) return null;
-  const resp = await fetch(GROQ_ENDPOINT, {
+  const resp = await fetch(IA_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
     body: JSON.stringify({ model: getModelIA(), ...body })
@@ -4099,9 +4095,9 @@ async function chamarGroq(body) {
       ? (parseInt(waitMatch[1]) * 60000 + parseFloat(waitMatch[2] || 0) * 1000 + 5000)
       : 65000;
     _iaRateLimited = true;
-    console.warn(`[GROQ 429] Rate limit — IA pausada por ${Math.round(waitMs/60000)}min`);
+
     toast(`⚠ DeepSeek: limite diário atingido. IA pausada por ~${Math.round(waitMs/60000)}min. A cotação continua sem IA.`, 'warn', 8000);
-    setTimeout(() => { _iaRateLimited = false; console.log('[DeepSeek] Reativada'); }, waitMs);
+    setTimeout(() => { _iaRateLimited = false; }, waitMs);
     throw new Error(`Rate limit: ${txt.slice(0, 200)}`);
   }
   if (!resp.ok) throw new Error(`DeepSeek HTTP ${resp.status}`);
@@ -4384,7 +4380,7 @@ function vetoCategoria(queryDescricao, descricaoItemEncontrado) {
     if (!defCat) continue;
     for (const catR of catsResultado) {
       if (defCat.incompativel.includes(catR)) {
-        console.log(`[VETO CATEGORIA] query="${q.slice(0,40)}" (${catQ}) vs resultado="${d.slice(0,40)}" (${catR})`);
+
         return true;
       }
     }
@@ -4423,11 +4419,7 @@ function vetoDensidade(queryDescricao, descricaoItemEncontrado, objetoCompraEnco
 
   const ratio = compResultado / compQuery;
   if (ratio > MAX_RATIO_DENSIDADE) {
-    console.log(
-      `[VETO DENSIDADE] query=${compQuery} | item=${compResultado} | ratio=${ratio.toFixed(1)}x\n` +
-      `  query: "${queryDescricao.slice(0,60)}"\n` +
-      `  item: "${(descricaoItemEncontrado||'').slice(0,60)}"`
-    );
+
     return true;
   }
   return false;
@@ -4674,7 +4666,7 @@ async function cotarTudoAutomaticamente(cotacaoId) {
             for (const t of todos)
               if (!queries.includes(t)) queries.push(t);
           }
-        } catch(e) { console.warn('[IA TERMOS] Falhou:', e.message); }
+        } catch(e) {}
       }
 
       const queriesAlgo = gerarVariacoesQuery(item.descricao);
@@ -4780,7 +4772,7 @@ async function cotarTudoAutomaticamente(cotacaoId) {
               if (rIA && avaliacaoIA.scoreIA >= 0.30) {
                 rIA._aprovadoPorIA = true;
                 rIA.scoreItem = Math.max(rIA.scoreItem || 0, avaliacaoIA.scoreIA);
-                console.log(`[IA ITEM] "${item.descricao.slice(0,40)}" → escolheu "${(rIA.descricaoItem||'').slice(0,40)}" score=${avaliacaoIA.scoreIA}`);
+
               }
             }
           }
@@ -4789,8 +4781,8 @@ async function cotarTudoAutomaticamente(cotacaoId) {
             _iaRateLimited = true;
             const waitMatch = e.message.match(/try again in (\d+)m/);
             const waitMs = waitMatch ? parseInt(waitMatch[1]) * 60000 + 5000 : 60000;
-            console.warn(`[GROQ 429] Rate limit — desabilitando IA por ${Math.round(waitMs/60000)}min`);
-            setTimeout(() => { _iaRateLimited = false; console.log('[DeepSeek] Rate limit expirado — IA reativada'); }, waitMs);
+
+            setTimeout(() => { _iaRateLimited = false; }, waitMs);
           }
         }
       }
@@ -4885,7 +4877,7 @@ async function cotarTudoAutomaticamente(cotacaoId) {
         if (tituloEl) tituloEl.textContent = '⚠ Proxy desconectado — reinicie o .bat';
         break;
       }
-      console.error(`Erro ao cotar item "${item.descricao.slice(0,40)}":`, e);
+
       autoState.itens[idx] = { ...autoState.itens[idx], status: 'erro', cotacoes: 0 };
       semResultado++;
     }
@@ -5113,7 +5105,7 @@ async function buscarHeadless(query, uf = '', extras = {}) {
       if (scoreUltimasPaginas.length >= 2) {
         const ultimas2 = scoreUltimasPaginas.slice(-2);
         if (ultimas2.every(s => s < 0.15)) {
-          console.log(`[EARLY STOP] ${tipoDoc} pág ${pagAtual} — score médio ${scoreMedio.toFixed(2)} < 0.15 por 2 páginas`);
+
           break;
         }
       }
@@ -5212,14 +5204,12 @@ async function executarBuscaLocal() {
   ultimoErroFetch = null;
 
   const t0 = performance.now();
-  console.group('🚀 Busca LOCAL (base sincronizada)');
-  console.log('Query:', query, '| Termos:', extrairTermos(query));
+
 
   try {
     // FASE 1: busca instantânea na base local
     atualizarProgresso('Buscando na base local...', 0, 0);
     const compativeis = await buscarNaBaseLocal(query, { uf, modalidade, meses });
-    console.log(`📊 ${compativeis.length} contratações compatíveis na base local`);
 
     if (compativeis.length === 0) {
       document.getElementById('progress-area').classList.remove('show');
@@ -5319,7 +5309,7 @@ async function executarBuscaLocal() {
         }
         return cotacoes;
       } catch (e) {
-        console.warn('Erro processando', c.id, e);
+
         return [];
       }
     };
@@ -5354,8 +5344,7 @@ async function executarBuscaLocal() {
 
     document.getElementById('progress-area').classList.remove('show');
     const segundos = ((performance.now() - t0) / 1000).toFixed(1);
-    console.log(`⏱ Concluído em ${segundos}s — ${state.resultadosBusca.length} cotações`);
-    console.groupEnd();
+
 
     if (state.resultadosBusca.length === 0) {
       mostrarSemResultados(state.baseLocal.totalContratacoes, compativeis.length, 0);
@@ -5364,8 +5353,8 @@ async function executarBuscaLocal() {
       toast(`${state.resultadosBusca.length} cotações em ${segundos}s`, 'success');
     }
   } catch (e) {
-    console.error(e);
-    console.groupEnd();
+
+
     document.getElementById('progress-area').classList.remove('show');
     document.getElementById('results-area').innerHTML = `
       <div class="alert alert-error">
@@ -5431,12 +5420,7 @@ async function executarBuscaOnline() {
 
   // Mostra ao usuário no console o que está procurando
   const termosBuscados = extrairTermos(query);
-  console.group('🔍 Busca PNCP');
-  console.log('Query original:', query);
-  console.log('Termos extraídos (procurando estes no texto):', termosBuscados.map(t => `${t.palavra} (raiz: ${t.stem})`));
-  console.log('Modalidades:', modalidades.map(m => MODALIDADES[m]).join(', '));
-  console.log('Períodos a varrer:', periodos.length, periodos);
-  console.log('UF:', uf || 'Todas');
+
 
   try {
     // 1. Para cada período e modalidade, busca contratações em LOTES PARALELOS
@@ -5460,7 +5444,7 @@ async function executarBuscaOnline() {
 
           const respostas = await Promise.all(
             lote.map(p => buscarContratacoes(mod, periodo.ini, periodo.fim, uf, p)
-                          .catch(e => { console.warn(`  ⚠ Erro pág ${p}:`, e.message); return null; }))
+                          .catch(() => null))
           );
 
           // Processa as respostas em ordem
@@ -5473,7 +5457,7 @@ async function executarBuscaOnline() {
                 || resp.contratacoes || resp.resultado
                 || (Object.values(resp).find(v => Array.isArray(v) && v.length > 0)) || [];
             if (itens2.length === 0) {
-              console.log(`  → ${MODALIDADES[mod]} pág ${pag} (${periodo.ini}): vazia.`);
+
               paginasEsgotadas = true;
               continue;
             }
@@ -5486,7 +5470,7 @@ async function executarBuscaOnline() {
               totalAnalisadas++;
             }
             if (itens2.length < 50) {
-              console.log(`  → ${MODALIDADES[mod]} pág ${pag}: última (${itens2.length} registros).`);
+
               paginasEsgotadas = true;
             }
           }
@@ -5496,25 +5480,23 @@ async function executarBuscaOnline() {
       }
     }
 
-    console.log(`📊 Total analisadas: ${totalAnalisadas}`);
-    console.log(`📊 Com objeto compatível: ${totalComObjetoCompativel}`);
+
 
     if (totalComObjetoCompativel > 0 && totalComObjetoCompativel <= 20) {
       // Lista as compatíveis no console para o usuário ver o que foi encontrado
-      console.log('🎯 Contratações com objeto compatível:');
+
       contratacoesCandidatas.slice(0, 20).forEach((c, i) => {
-        console.log(`  ${i+1}. [${c._modalidade}] ${(c.objetoCompra || '').slice(0, 120)}...`);
+
       });
     }
 
     // 2. Ordena candidatas por score e limita
     contratacoesCandidatas.sort((a, b) => b._score - a._score);
     const paraProcessar = contratacoesCandidatas.slice(0, MAX_CONTRATACOES_POR_MOD);
-    console.log(`📊 Selecionadas para inspecionar itens: ${paraProcessar.length}`);
 
     if (paraProcessar.length === 0) {
-      console.warn('⚠ Nenhuma contratação passou no filtro de objeto. Tente termos mais simples.');
-      console.groupEnd();
+
+
       mostrarSemResultados(totalAnalisadas, 0, 0);
       return;
     }
@@ -5622,7 +5604,7 @@ async function executarBuscaOnline() {
         }
         return cotacoes;
       } catch (e) {
-        console.warn('Erro processando contratação:', e);
+
         return [];
       }
     };
@@ -5656,9 +5638,8 @@ async function executarBuscaOnline() {
       }
     }
 
-    console.log(`📊 Itens analisados: ${totalItensAnalisados}`);
-    console.log(`📊 Cotações montadas (com valores): ${totalCompativeis}`);
-    console.groupEnd();
+
+
 
     // Ordena resultados por score combinado
     state.resultadosBusca.sort((a, b) => (b.scoreObjeto + b.scoreItem) - (a.scoreObjeto + a.scoreItem));
@@ -5672,7 +5653,7 @@ async function executarBuscaOnline() {
       toast(`${state.resultadosBusca.length} cotações encontradas`, 'success');
     }
   } catch (e) {
-    console.error(e);
+
     document.getElementById('progress-area').classList.remove('show');
     const isFile = isProtocoloFile();
     const isCORS = (ultimoErroFetch && ultimoErroFetch.isCORS) ||
@@ -6680,7 +6661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await carregarStatusBaseLocal();
   } catch (e) {
-    console.warn('Base local indisponível:', e);
+
   }
   navigate('home');
 });
