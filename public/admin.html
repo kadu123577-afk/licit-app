@@ -189,6 +189,8 @@
   <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
   <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
   <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="ic-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></symbol>
+  <symbol id="ic-trending" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
   <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
 </svg>
 
@@ -216,6 +218,10 @@
       <div class="sidebar-label">Gestão</div>
       <div class="nav-item" id="nav-orgs" onclick="navigate('orgs')"><svg><use href="#ic-building"/></svg> Organizações<span class="nav-count" id="nav-count-orgs">—</span></div>
       <div class="nav-item" id="nav-usuarios" onclick="navigate('usuarios')"><svg><use href="#ic-users"/></svg> Usuários<span class="nav-count" id="nav-count-usuarios">—</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Sistema</div>
+      <div class="nav-item" id="nav-financeiro" onclick="navigate('financeiro')"><svg><use href="#ic-dollar"/></svg> Financeiro<span class="nav-count" id="nav-count-fin">—</span></div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Sistema</div>
@@ -292,6 +298,47 @@
       </div>
     </div>
 
+
+    <!-- FINANCEIRO -->
+    <div class="page" id="page-financeiro">
+      <div class="page-header">
+        <div><div class="page-title">Financeiro</div><div class="page-subtitle">Mensalidades, cobranças e histórico de pagamentos</div></div>
+        <div class="page-actions">
+          <button class="btn btn-secondary btn-sm" onclick="exportarCSVFin()"><svg><use href="#ic-download"/></svg> Exportar CSV</button>
+          <button class="btn btn-primary" onclick="abrirModalPagamento()"><svg><use href="#ic-plus"/></svg> Novo lançamento</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card"><div class="stat-header"><span class="stat-label">Recebido no mês</span><span class="stat-icon green"><svg><use href="#ic-check"/></svg></span></div><div class="stat-value green" id="fin-recebido">—</div><div class="stat-change" id="fin-recebido-label">Este mês</div></div>
+        <div class="stat-card"><div class="stat-header"><span class="stat-label">Em aberto</span><span class="stat-icon blue"><svg><use href="#ic-dollar"/></svg></span></div><div class="stat-value blue" id="fin-aberto">—</div><div class="stat-change">Aguardando pagamento</div></div>
+        <div class="stat-card"><div class="stat-header"><span class="stat-label">Vencido</span><span class="stat-icon red"><svg><use href="#ic-alert"/></svg></span></div><div class="stat-value red" id="fin-vencido">—</div><div class="stat-change">Pagamento em atraso</div></div>
+        <div class="stat-card"><div class="stat-header"><span class="stat-label">A vencer (30 dias)</span><span class="stat-icon gold"><svg><use href="#ic-clock"/></svg></span></div><div class="stat-value gold" id="fin-avencer">—</div><div class="stat-change">Próximos vencimentos</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="search-wrap"><svg><use href="#ic-search"/></svg><input class="search-input" id="search-fin" placeholder="Buscar lançamento ou organização..." oninput="filtrarFin()"></div>
+          <div class="card-actions">
+            <select class="filter-select" id="filtro-fin-status" onchange="filtrarFin()">
+              <option value="">Todos os status</option>
+              <option value="pendente">Pendente</option>
+              <option value="pago">Pago</option>
+              <option value="vencido">Vencido</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <select class="filter-select" id="filtro-fin-org" onchange="filtrarFin()">
+              <option value="">Todas as organizações</option>
+            </select>
+            <select class="filter-select" id="filtro-fin-mes" onchange="filtrarFin()">
+              <option value="">Todos os meses</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap" id="tabela-fin"><div class="loading-state">Carregando...</div></div>
+      </div>
+    </div>
+
     <!-- CONFIGURAÇÕES -->
     <div class="page" id="page-configuracoes">
       <div class="page-header"><div><div class="page-title">Configurações</div><div class="page-subtitle">Informações da plataforma</div></div></div>
@@ -364,6 +411,49 @@
   </div>
 </div>
 
+
+<!-- MODAL PAGAMENTO -->
+<div class="modal-overlay" id="modal-pagamento">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><h3 id="modal-pag-titulo">Novo Lançamento</h3><p>Registro de mensalidade, cobrança ou pagamento avulso.</p></div>
+    <input type="hidden" id="pag-id">
+    <div class="form-row">
+      <div class="form-group"><label>Organização *</label><select id="pag-org"></select></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="pag-tipo">
+          <option value="mensalidade">Mensalidade</option>
+          <option value="setup">Setup / Implantação</option>
+          <option value="avulso">Avulso</option>
+          <option value="desconto">Desconto</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Descrição *</label><input type="text" id="pag-descricao" placeholder="Ex: Mensalidade Maio/2026"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$) *</label><input type="number" id="pag-valor" placeholder="0,00" step="0.01" min="0"></div>
+      <div class="form-group"><label>Vencimento *</label><input type="date" id="pag-vencimento"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label>
+        <select id="pag-status">
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago</option>
+          <option value="vencido">Vencido</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Data do pagamento</label><input type="date" id="pag-data-pag"></div>
+    </div>
+    <div class="form-group"><label>Observação</label><textarea id="pag-obs" rows="2" placeholder="Opcional..." style="resize:vertical"></textarea></div>
+    <div class="alert alert-error" id="pag-erro"></div>
+    <div class="alert alert-success" id="pag-sucesso"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-pagamento')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-pag" onclick="salvarPagamento()">Salvar lançamento</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toasts"></div>
 
 <script>
@@ -393,7 +483,7 @@ function navigate(page){
   document.getElementById('nav-'+page)?.classList.add('active');
 }
 
-async function carregarTudo(){await Promise.all([carregarOrgs(),carregarUsers()]);renderDashboard();}
+async function carregarTudo(){await Promise.all([carregarOrgs(),carregarUsers(),carregarFinanceiro()]);renderDashboard();}
 
 async function carregarOrgs(){
   const{data,error}=await sb.from('organizacoes').select('*').order('nome');
@@ -696,6 +786,254 @@ function planoPill(p){const m={basico:'pill-gray',profissional:'pill-blue',admin
 function rolePill(r){return r==='admin'?'<span class="pill pill-purple">Admin</span>':'<span class="pill pill-gray">Usuário</span>';}
 function fecharModal(id){document.getElementById(id).classList.remove('show');}
 function toast(msg,type='success'){const icons={success:'#ic-check',error:'#ic-x',info:'#ic-alert'};const c=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=`<svg><use href="${icons[type]||'#ic-check'}"/></svg>${msg}`;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+// ── FINANCEIRO ────────────────────────────────────────────────────────────────
+let _pagamentos = [];
+
+async function carregarFinanceiro() {
+  const { data, error } = await sb.from('pagamentos')
+    .select('*, organizacoes(nome)')
+    .order('vencimento', { ascending: false });
+  if (error) { toast('Erro ao carregar financeiro: ' + error.message, 'error'); return; }
+
+  // Auto-calcular vencidos
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  _pagamentos = (data || []).map(p => {
+    if (p.status === 'pendente' && new Date(p.vencimento) < hoje) p.status = 'vencido';
+    return p;
+  });
+
+  atualizarStatsFin();
+  atualizarFiltrosMes();
+  atualizarFiltroOrgFin();
+  document.getElementById('nav-count-fin').textContent = _pagamentos.length;
+  filtrarFin();
+}
+
+function atualizarStatsFin() {
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const em30 = new Date(hoje); em30.setDate(hoje.getDate() + 30);
+  const mesAtual = new Date().toISOString().slice(0, 7);
+
+  const recebido = _pagamentos
+    .filter(p => p.status === 'pago' && (p.data_pagamento || '').startsWith(mesAtual))
+    .reduce((s, p) => s + parseFloat(p.valor || 0), 0);
+
+  const aberto = _pagamentos
+    .filter(p => p.status === 'pendente')
+    .reduce((s, p) => s + parseFloat(p.valor || 0), 0);
+
+  const vencido = _pagamentos
+    .filter(p => p.status === 'vencido')
+    .reduce((s, p) => s + parseFloat(p.valor || 0), 0);
+
+  const avencer = _pagamentos
+    .filter(p => p.status === 'pendente' && new Date(p.vencimento) >= hoje && new Date(p.vencimento) <= em30)
+    .reduce((s, p) => s + parseFloat(p.valor || 0), 0);
+
+  document.getElementById('fin-recebido').textContent = fmtVal(recebido);
+  document.getElementById('fin-aberto').textContent = fmtVal(aberto);
+  document.getElementById('fin-vencido').textContent = fmtVal(vencido);
+  document.getElementById('fin-avencer').textContent = fmtVal(avencer);
+  document.getElementById('fin-recebido-label').textContent = `Mês ${mesAtual.slice(5)}/${mesAtual.slice(0,4)}`;
+}
+
+function atualizarFiltrosMes() {
+  const meses = [...new Set(_pagamentos.map(p => p.vencimento?.slice(0, 7)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('filtro-fin-mes');
+  sel.innerHTML = '<option value="">Todos os meses</option>' +
+    meses.map(m => `<option value="${m}">${m.slice(5)}/${m.slice(0,4)}</option>`).join('');
+}
+
+function atualizarFiltroOrgFin() {
+  const sel = document.getElementById('filtro-fin-org');
+  sel.innerHTML = '<option value="">Todas as organizações</option>' +
+    _orgs.map(o => `<option value="${o.id}">${o.nome}</option>`).join('');
+}
+
+function filtrarFin() {
+  const q = (document.getElementById('search-fin')?.value || '').toLowerCase();
+  const st = document.getElementById('filtro-fin-status')?.value || '';
+  const org = document.getElementById('filtro-fin-org')?.value || '';
+  const mes = document.getElementById('filtro-fin-mes')?.value || '';
+
+  const f = _pagamentos.filter(p => {
+    const matchQ = !q || (p.descricao || '').toLowerCase().includes(q) || (p.organizacoes?.nome || '').toLowerCase().includes(q);
+    const matchS = !st || p.status === st;
+    const matchO = !org || p.organizacao_id === org;
+    const matchM = !mes || (p.vencimento || '').startsWith(mes);
+    return matchQ && matchS && matchO && matchM;
+  });
+
+  renderTabelaFin(f);
+}
+
+function renderTabelaFin(pags) {
+  if (!pags.length) {
+    document.getElementById('tabela-fin').innerHTML = `<div class="empty-state"><svg><use href="#ic-dollar"/></svg><h4>Nenhum lançamento encontrado</h4><p>Crie o primeiro lançamento financeiro</p></div>`;
+    return;
+  }
+
+  const rows = pags.map(p => {
+    const venc = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '—';
+    const pago = p.data_pagamento ? new Date(p.data_pagamento).toLocaleDateString('pt-BR') : '—';
+    const val = fmtVal(parseFloat(p.valor || 0));
+    return `<tr>
+      <td><div class="td-main">${p.organizacoes?.nome || '—'}</div></td>
+      <td><div class="td-main">${p.descricao}</div><div class="td-sub">${tipoPill(p.tipo)}</div></td>
+      <td style="font-weight:600;color:var(--text)">${val}</td>
+      <td>${statusFinPill(p.status)}</td>
+      <td style="font-size:13px;color:var(--text-soft)">${venc}</td>
+      <td style="font-size:13px;color:var(--text-soft)">${p.status === 'pago' ? pago : '—'}</td>
+      <td><div class="td-actions">
+        ${p.status === 'pendente' || p.status === 'vencido' ? `<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:rgba(65,243,106,0.2)" onclick="marcarPago('${p.id}')" title="Marcar como pago"><svg><use href="#ic-check"/></svg> Pago</button>` : ''}
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="editarPagamento('${p.id}')" title="Editar"><svg><use href="#ic-edit"/></svg></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="confirmarExcluirPag('${p.id}','${(p.descricao||'').replace(/'/g,"\'")}')"><svg><use href="#ic-trash"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tabela-fin').innerHTML = `<table>
+    <thead><tr><th>Organização</th><th>Descrição</th><th>Valor</th><th>Status</th><th>Vencimento</th><th>Pago em</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// MODAL PAGAMENTO
+function abrirModalPagamento() {
+  document.getElementById('modal-pag-titulo').textContent = 'Novo Lançamento';
+  document.getElementById('pag-id').value = '';
+  document.getElementById('pag-descricao').value = '';
+  document.getElementById('pag-valor').value = '';
+  document.getElementById('pag-vencimento').value = '';
+  document.getElementById('pag-data-pag').value = '';
+  document.getElementById('pag-obs').value = '';
+  document.getElementById('pag-tipo').value = 'mensalidade';
+  document.getElementById('pag-status').value = 'pendente';
+  document.getElementById('pag-erro').style.display = 'none';
+  document.getElementById('pag-sucesso').style.display = 'none';
+  document.getElementById('btn-salvar-pag').textContent = 'Salvar lançamento';
+  document.getElementById('pag-org').innerHTML = '<option value="">Selecione...</option>' +
+    _orgs.map(o => `<option value="${o.id}">${o.nome}</option>`).join('');
+  document.getElementById('modal-pagamento').classList.add('show');
+  setTimeout(() => document.getElementById('pag-descricao').focus(), 100);
+}
+
+function editarPagamento(id) {
+  const p = _pagamentos.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modal-pag-titulo').textContent = 'Editar Lançamento';
+  document.getElementById('pag-id').value = p.id;
+  document.getElementById('pag-descricao').value = p.descricao || '';
+  document.getElementById('pag-valor').value = p.valor || '';
+  document.getElementById('pag-vencimento').value = p.vencimento || '';
+  document.getElementById('pag-data-pag').value = p.data_pagamento || '';
+  document.getElementById('pag-obs').value = p.observacao || '';
+  document.getElementById('pag-tipo').value = p.tipo || 'mensalidade';
+  document.getElementById('pag-status').value = p.status || 'pendente';
+  document.getElementById('pag-erro').style.display = 'none';
+  document.getElementById('pag-sucesso').style.display = 'none';
+  document.getElementById('btn-salvar-pag').textContent = 'Salvar alterações';
+  document.getElementById('pag-org').innerHTML = '<option value="">Selecione...</option>' +
+    _orgs.map(o => `<option value="${o.id}"${o.id === p.organizacao_id ? ' selected' : ''}>${o.nome}</option>`).join('');
+  document.getElementById('modal-pagamento').classList.add('show');
+}
+
+async function salvarPagamento() {
+  const id = document.getElementById('pag-id').value;
+  const orgId = document.getElementById('pag-org').value;
+  const descricao = document.getElementById('pag-descricao').value.trim();
+  const valor = parseFloat(document.getElementById('pag-valor').value);
+  const vencimento = document.getElementById('pag-vencimento').value;
+  const data_pagamento = document.getElementById('pag-data-pag').value || null;
+  const tipo = document.getElementById('pag-tipo').value;
+  const status = document.getElementById('pag-status').value;
+  const observacao = document.getElementById('pag-obs').value.trim() || null;
+  const erroEl = document.getElementById('pag-erro');
+  const okEl = document.getElementById('pag-sucesso');
+  const btn = document.getElementById('btn-salvar-pag');
+
+  if (!orgId || !descricao || !valor || !vencimento) {
+    erroEl.textContent = 'Preencha organização, descrição, valor e vencimento.';
+    erroEl.style.display = 'block'; return;
+  }
+  erroEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  const payload = { organizacao_id: orgId, descricao, valor, vencimento, data_pagamento, tipo, status, observacao };
+  const { error } = id
+    ? await sb.from('pagamentos').update(payload).eq('id', id)
+    : await sb.from('pagamentos').insert(payload);
+
+  btn.disabled = false; btn.textContent = id ? 'Salvar alterações' : 'Salvar lançamento';
+  if (error) { erroEl.textContent = error.message; erroEl.style.display = 'block'; return; }
+
+  okEl.textContent = id ? 'Lançamento atualizado!' : 'Lançamento criado!';
+  okEl.style.display = 'block';
+  registrarAtividade(id ? `Lançamento "${descricao}" atualizado` : `Lançamento "${descricao}" criado`, 'blue');
+  toast(id ? 'Lançamento atualizado!' : 'Lançamento criado!', 'success');
+  setTimeout(() => { fecharModal('modal-pagamento'); carregarFinanceiro(); }, 900);
+}
+
+async function marcarPago(id) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const { error } = await sb.from('pagamentos').update({ status: 'pago', data_pagamento: hoje }).eq('id', id);
+  if (error) { toast('Erro: ' + error.message, 'error'); return; }
+  const p = _pagamentos.find(x => x.id === id);
+  registrarAtividade(`"${p?.descricao}" marcado como pago`, 'green');
+  toast('Marcado como pago!', 'success');
+  carregarFinanceiro();
+}
+
+async function confirmarExcluirPag(id, desc) {
+  if (!confirm(`Excluir lançamento "${desc}"?\nEsta ação não pode ser desfeita.`)) return;
+  const { error } = await sb.from('pagamentos').delete().eq('id', id);
+  if (error) { toast('Erro: ' + error.message, 'error'); return; }
+  registrarAtividade(`Lançamento "${desc}" excluído`, 'red');
+  toast('Lançamento excluído.', 'info');
+  carregarFinanceiro();
+}
+
+function exportarCSVFin() {
+  const rows = [['Organização','Descrição','Tipo','Valor','Status','Vencimento','Pago em','Observação']];
+  _pagamentos.forEach(p => rows.push([
+    p.organizacoes?.nome||'—', p.descricao||'—', p.tipo||'—',
+    p.valor||0, p.status||'—', p.vencimento||'—',
+    p.data_pagamento||'—', p.observacao||''
+  ]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = `licit-financeiro-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('CSV exportado!', 'success');
+}
+
+// HELPERS FINANCEIROS
+function fmtVal(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function statusFinPill(s) {
+  const m = {
+    pago: '<span class="pill pill-green">Pago</span>',
+    pendente: '<span class="pill pill-blue">Pendente</span>',
+    vencido: '<span class="pill pill-red">Vencido</span>',
+    cancelado: '<span class="pill pill-gray">Cancelado</span>',
+  };
+  return m[s] || `<span class="pill pill-gray">${s}</span>`;
+}
+
+function tipoPill(t) {
+  const m = {
+    mensalidade: '<span class="pill pill-gray" style="font-size:10px">Mensalidade</span>',
+    setup: '<span class="pill pill-purple" style="font-size:10px">Setup</span>',
+    avulso: '<span class="pill pill-gold" style="font-size:10px">Avulso</span>',
+    desconto: '<span class="pill pill-orange" style="font-size:10px">Desconto</span>',
+  };
+  return m[t] || `<span class="pill pill-gray" style="font-size:10px">${t||'—'}</span>`;
+}
+
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));});
 </script>
