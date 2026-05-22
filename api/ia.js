@@ -1,25 +1,31 @@
-// api/ia.js — Proxy seguro para a API DeepSeek
-// A chave fica em variável de ambiente DEEPSEEK_API_KEY no Vercel
-
-const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/v1/chat/completions';
+// api/ia.js — Proxy serverless para DeepSeek
+// A chave fica em Environment Variables do Vercel (nunca exposta ao cliente)
 
 export default async function handler(req, res) {
-  // Só aceita POST
+  // CORS preflight
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Método não permitido' });
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API key não configurada no servidor' });
+    return res.status(500).json({ error: 'IA não configurada no servidor.' });
   }
 
   try {
-    const response = await fetch(DEEPSEEK_ENDPOINT, {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(req.body),
     });
@@ -31,7 +37,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json(data);
-  } catch (e) {
-    return res.status(500).json({ error: 'Erro ao chamar DeepSeek: ' + e.message });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao contatar a IA: ' + error.message });
   }
 }
