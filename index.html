@@ -1801,6 +1801,9 @@ Responda APENAS com JSON válido, sem markdown:
 
 // Preenche o campo de busca com sugestões da IA e mostra badges clicáveis
 async function sugerirTermosIA(item) {
+  // Reset flag de tipo manual e detecta automaticamente
+  tipoAlteradoManualmente = false;
+  atualizarTipoAuto(item.descricao);
   const container = document.getElementById('ia-sugestoes');
   if (!container) return;
 
@@ -3097,6 +3100,15 @@ async function renderBusca(cotacaoId, itemId) {
                 </select>
               </div>
               <div class="field" style="margin:0;">
+                <label>Tipo de contratação <span id="tipo-ia-badge" style="font-size:10px;color:var(--text-muted);font-style:italic;"></span></label>
+                <select id="search-tipo" class="select" onchange="tipoAlteradoManualmente=true">
+                  <option value="qualquer" selected>Qualquer tipo</option>
+                  <option value="aquisicao">🛒 Aquisição / Compra</option>
+                  <option value="locacao">🔑 Locação / Aluguel</option>
+                  <option value="servico">🔧 Serviço / Manutenção</option>
+                </select>
+              </div>
+              <div class="field" style="margin:0;">
                 <label>Modalidade</label>
                 <select id="search-modalidade" class="select">
                   <option value="todas" selected>Todas</option>
@@ -3669,6 +3681,99 @@ async function executarBusca() {
    Etapa 2: carregamento sob demanda ao marcar cards (~3-5s/card)
    ==================================================================== */
 
+
+// ── TIPO DE CONTRATAÇÃO ───────────────────────────────────────────────────────
+let tipoAlteradoManualmente = false;
+
+// Palavras que INDICAM cada tipo (presença = é desse tipo)
+const TIPO_INDICADORES = {
+  aquisicao: ['aquisição','aquisicao','compra','fornecimento','entrega','material','equipamento','produto','bem','estoque','patrimônio','patrimonio'],
+  locacao:   ['locação','locacao','aluguel','arrendamento','cessão de uso','cessao de uso','direito de uso'],
+  servico:   ['serviço','servico','manutenção','manutencao','instalação','instalacao','reparo','reforma','conservação','conservacao','limpeza','vigilância','vigilancia','transporte','consultoria','assessoria','treinamento','capacitação','capacitacao','licença de software','licenca de software'],
+};
+
+// Palavras que EXCLUEM um tipo (presença = não é desse tipo)
+const TIPO_EXCLUSOES = {
+  aquisicao: ['locação','locacao','aluguel','manutenção','manutencao','reparo','serviço','servico','instalação','instalacao','limpeza','vigilância','vigilancia'],
+  locacao:   ['aquisição','aquisicao','compra','fornecimento','entrega de material'],
+  servico:   ['aquisição','aquisicao','compra de','fornecimento de material','entrega de equipamento'],
+};
+
+// Detecta tipo automaticamente pela descrição do item
+function detectarTipoContratacao(descricao) {
+  const d = descricao.toLowerCase();
+  
+  // Verifica indicadores
+  const scores = { aquisicao: 0, locacao: 0, servico: 0 };
+  for (const [tipo, palavras] of Object.entries(TIPO_INDICADORES)) {
+    for (const p of palavras) {
+      if (d.includes(p)) scores[tipo]++;
+    }
+  }
+  
+  // Tipo com mais indicadores vence
+  const melhor = Object.entries(scores).sort((a,b) => b[1]-a[1])[0];
+  if (melhor[1] === 0) return 'qualquer'; // sem indicadores claros
+  if (melhor[1] === scores.locacao && melhor[1] === scores.servico) return 'qualquer'; // empate
+  return melhor[0];
+}
+
+// Aplica detecção automática no seletor (se usuário não alterou manualmente)
+function atualizarTipoAuto(descricao) {
+  if (tipoAlteradoManualmente) return;
+  const sel = document.getElementById('search-tipo');
+  if (!sel) return;
+  const tipo = detectarTipoContratacao(descricao);
+  sel.value = tipo;
+  const badge = document.getElementById('tipo-ia-badge');
+  if (badge) {
+    if (tipo !== 'qualquer') {
+      badge.textContent = '· IA detectou';
+      badge.style.color = 'var(--green)';
+    } else {
+      badge.textContent = '';
+    }
+  }
+}
+
+// Detecta tipo via IA (mais preciso para casos ambíguos)
+async function detectarTipoComIA(descricao) {
+  try {
+    const prompt = \`Analise esta descrição de item de licitação e classifique em UMA categoria:
+"${descricao.slice(0, 300)}"
+
+Categorias:
+- aquisicao: compra/fornecimento de bem/material/equipamento
+- locacao: aluguel/locação de bem/veículo/equipamento
+- servico: prestação de serviço/manutenção/instalação/consultoria
+
+Responda APENAS com JSON: {"tipo": "aquisicao"} ou {"tipo": "locacao"} ou {"tipo": "servico"} ou {"tipo": "qualquer"}\`;
+    
+    const data = await chamarIA({ max_tokens: 50, temperature: 0, messages: [{ role: 'user', content: prompt }] });
+    if (!data) return null;
+    const texto = data?.choices?.[0]?.message?.content || '';
+    const match = texto.match(/\{[\s\S]*?\}/);
+    if (!match) return null;
+    const res = JSON.parse(match[0]);
+    return res.tipo || null;
+  } catch(e) { return null; }
+}
+
+// Filtra candidatas pelo tipo selecionado
+function filtrarPorTipo(candidatas, tipo) {
+  if (!tipo || tipo === 'qualquer') return candidatas;
+  
+  const exclusoes = TIPO_EXCLUSOES[tipo] || [];
+  return candidatas.filter(c => {
+    const texto = ((c.description || '') + ' ' + (c.title || '')).toLowerCase();
+    // Remove se contém palavras do tipo errado
+    for (const ex of exclusoes) {
+      if (texto.includes(ex)) return false;
+    }
+    return true;
+  });
+}
+
 async function executarBuscaOpcaoB() {
   const queryPrincipal = document.getElementById('search-query').value.trim();
   if (!queryPrincipal) { toast('Informe um termo de busca', 'error'); return; }
@@ -3700,6 +3805,21 @@ async function executarBuscaOpcaoB() {
         if (queriesParaBuscar.length >= 5) break;
       }
     }
+  }
+
+  // Detectar tipo via IA (async, não bloqueia)
+  const tipoSel = document.getElementById('search-tipo');
+  if (tipoSel && !tipoAlteradoManualmente) {
+    detectarTipoComIA(queryPrincipal).then(tipo => {
+      if (tipo && tipoSel) {
+        tipoSel.value = tipo;
+        const badge = document.getElementById('tipo-ia-badge');
+        if (badge && tipo !== 'qualquer') {
+          badge.textContent = '· IA detectou';
+          badge.style.color = 'var(--green)';
+        }
+      }
+    });
   }
 
   const btnBuscar = document.getElementById('btn-buscar');
@@ -3801,6 +3921,20 @@ async function executarBuscaOpcaoB() {
             }
           }
         }
+      }
+    }
+
+    // Aplica filtro de tipo de contratação
+    const tipoFiltro = document.getElementById('search-tipo')?.value || 'qualquer';
+    if (tipoFiltro !== 'qualquer') {
+      const antes = candidatas.length;
+      const filtradas = filtrarPorTipo([...candidatas], tipoFiltro);
+      candidatas.length = 0;
+      filtradas.forEach(x => candidatas.push(x));
+      const removidos = antes - candidatas.length;
+      if (removidos > 0) {
+        atualizarProgresso(`Filtro de tipo: ${removidos} licitação(ões) incompatível(eis) removida(s)`, candidatas.length, candidatas.length);
+        await new Promise(r => setTimeout(r, 400));
       }
     }
 
