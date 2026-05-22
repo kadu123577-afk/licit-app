@@ -113,6 +113,7 @@
   </style>
 </head>
 <body>
+<script>document.documentElement.style.visibility="hidden";</script>
 
 <header>
   <div class="brand">
@@ -222,10 +223,26 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let _orgs = [];
 
-// ── AUTENTICAÇÃO ─────────────────────────────────────────────────────────────
+// ── AUTENTICAÇÃO + VERIFICAÇÃO DE ROLE ───────────────────────────────────────
 (async () => {
+  // 1. Verifica sessão ativa
   const { data } = await sb.auth.getSession();
   if (!data.session) { window.location.href = '/login.html'; return; }
+
+  // 2. Consulta role do usuário na tabela usuarios
+  const { data: usuario, error } = await sb
+    .from('usuarios')
+    .select('role')
+    .eq('id', data.session.user.id)
+    .single();
+
+  if (error || !usuario || usuario.role !== 'admin') {
+    window.location.href = '/index.html';
+    return;
+  }
+
+
+  document.documentElement.style.visibility = 'visible';
   document.getElementById('admin-email').textContent = data.session.user.email;
   await carregarTudo();
 })();
