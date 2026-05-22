@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
+      "source": "/api/ia",
+      "destination": "/api/ia"
+    },
+    {
       "source": "/api/pncp/:path*",
-      "destination": "https://pncp.gov.br/api/:path*"
+      "destination": "https://pncp.gov.br/api/pncp/:path*"
     },
     {
       "source": "/api/search",
@@ -19,11 +23,11 @@
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET,OPTIONS"
+          "value": "GET,POST,OPTIONS"
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Accept,Content-Type"
+          "value": "Accept,Content-Type,Authorization"
         }
       ]
     }
