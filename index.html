@@ -1628,7 +1628,6 @@ const IA_ENDPOINT = '/api/ia';
 function getApiKeyIA() {
   return localStorage.getItem(IA_KEY_STORAGE) || '';
 }
-function temIA() { return true; } // IA sempre disponível via servidor
 
 function getModelIA() {
   return localStorage.getItem(IA_MODEL_STORAGE) || 'deepseek-chat';
@@ -1637,7 +1636,7 @@ function getModelIA() {
 function atualizarBotaoIA() {
   const btn = document.getElementById('btn-ia-config');
   if (!btn) return;
-  const temKey = temIA();
+  const temKey = true;
   btn.innerHTML = temKey ? '🤖 IA ✓' : '🤖 IA';
   btn.style.borderColor = temKey ? 'var(--green)' : '';
   btn.style.color = temKey ? 'var(--green)' : '';
@@ -3085,7 +3084,7 @@ async function renderBusca(cotacaoId, itemId) {
             <h3 class="section-title" style="font-size:15px;">Filtros de Busca</h3>
             <div class="filters-row">
               <div class="field" style="margin:0;">
-                <label>Termo de busca ${temIA() ? '<span style="color:var(--green);font-size:11px;font-weight:600;">· IA ✓</span>' : ''}</label>
+                <label>Termo de busca ${true ? '<span style="color:var(--green);font-size:11px;font-weight:600;">· IA ✓</span>' : ''}</label>
                 <input type="text" id="search-query" class="input" value="${escapeHtml(simplificarTermoBusca(item.descricao))}" placeholder="Use termos simples">
               </div>
               <div class="field" style="margin:0;">
@@ -3119,7 +3118,7 @@ async function renderBusca(cotacaoId, itemId) {
               <button class="btn btn-primary" id="btn-buscar" onclick="executarBusca()">🔍 Buscar</button>
             </div>
             <div id="ia-sugestoes" style="min-height:28px;">
-              ${temIA() ? '<span class="text-muted text-small" style="display:flex;align-items:center;gap:6px;"><span class="spinner" style="width:11px;height:11px;border-width:1.5px;margin-top:8px;"></span></span>' : ''}
+              ${true ? '<span class="text-muted text-small" style="display:flex;align-items:center;gap:6px;"><span class="spinner" style="width:11px;height:11px;border-width:1.5px;margin-top:8px;"></span></span>' : ''}
             </div>
             <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
               <button class="btn btn-sm" style="background:var(--green-soft); border-color:var(--green); color:var(--green); font-weight:600;" onclick="document.getElementById('search-uf').value='GO'; executarBusca();" title="Busca apenas em Goiás">🟢 Buscar só em Goiás</button>
@@ -3744,7 +3743,7 @@ async function executarBuscaOpcaoB() {
             vistos.add(chave);
             // Só processa licitações com resultados cadastrados (tem_resultado: true)
             // Isso evita 404 em itens e acelera a busca
-            if (c.tem_resultado === false) continue;
+            if (!c.tem_resultado) continue; // ignora licitações sem resultados/preços cadastrados
             candidatas.push({ ...c, _score: calcularScorePonderado(query, c.description || c.title || ''), _tipoDoc: tipoDoc, _query: query });
             if (candidatas.length >= MAX_CANDIDATAS) { acabou = true; break; }
           }
@@ -3894,7 +3893,7 @@ async function carregarPrecosDe(idResultado) {
       ? calcularMediana(todasRefMedianas)
       : 0;
 
-    const iaAtiva = temIA();
+    const iaAtiva = true;
     if (iaAtiva) {
       try {
         const descricaoTarget = state.itemAtual?.descricao || query;
@@ -4664,7 +4663,7 @@ async function cotarTudoAutomaticamente(cotacaoId) {
           if (!queries.includes(q)) queries.push(q);
       }
 
-      if (getApiKeyIA()) {
+      if (true) {
         try {
           const resultIA = await gerarTermosBuscaComIA(item.descricao, item.unidade);
           if (resultIA?.termos?.length > 0) {
