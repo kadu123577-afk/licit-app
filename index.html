@@ -3894,8 +3894,8 @@ async function carregarPrecosDe(idResultado) {
       ? calcularMediana(todasRefMedianas)
       : 0;
 
-    const temIA = temIA();
-    if (temIA) {
+    const iaAtiva = temIA();
+    if (iaAtiva) {
       try {
         const descricaoTarget = state.itemAtual?.descricao || query;
         const unidadeTarget = state.itemAtual?.unidade || '—';
@@ -3928,7 +3928,7 @@ async function carregarPrecosDe(idResultado) {
       const itensRelevantes = itensResp.filter(x => x._scoreItem >= 0.25);
       if (itensRelevantes.length === 0) {
         r.statusPrecos = 'vazio';
-        r.mensagemErro = temIA
+        r.mensagemErro = iaAtiva
           ? 'IA e score por palavras-chave não encontraram item compatível nesta licitação'
           : 'Nenhum item compatível com o termo nesta licitação';
         atualizarCardUnico(r);
