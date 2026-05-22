@@ -3742,6 +3742,9 @@ async function executarBuscaOpcaoB() {
             const chave = c.item_url || c.numero_controle_pncp || `${c.orgao_cnpj}-${c.ano}-${c.numero_sequencial}`;
             if (vistos.has(chave)) continue; // já encontrado em outra query
             vistos.add(chave);
+            // Só processa licitações com resultados cadastrados (tem_resultado: true)
+            // Isso evita 404 em itens e acelera a busca
+            if (c.tem_resultado === false) continue;
             candidatas.push({ ...c, _score: calcularScorePonderado(query, c.description || c.title || ''), _tipoDoc: tipoDoc, _query: query });
             if (candidatas.length >= MAX_CANDIDATAS) { acabou = true; break; }
           }
