@@ -1749,8 +1749,7 @@ Responda APENAS com JSON válido, sem explicações fora do JSON:
 // Gera termos de busca otimizados para o PNCP via IA
 // Retorna { termos: string[], principal: string } ou null
 async function gerarTermosBuscaComIA(descricao, unidade) {
-  const key = getApiKeyIA();
-  if (!key) return null;
+  // IA disponível via servidor — não precisa de chave local
 
   const prompt = `Você é especialista em licitações públicas brasileiras.
 
@@ -3093,7 +3092,8 @@ async function renderBusca(cotacaoId, itemId) {
                   <option value="3">3 meses</option>
                   <option value="6">6 meses</option>
                   <option value="12">12 meses</option>
-                  <option value="24" selected>24 meses</option>
+                  <option value="24">24 meses</option>
+                  <option value="48" selected>48 meses</option>
                 </select>
               </div>
               <div class="field" style="margin:0;">
@@ -3163,7 +3163,7 @@ async function renderBusca(cotacaoId, itemId) {
   document.getElementById('main').innerHTML = html;
 
   // Se IA configurada, gera termos de busca melhores automaticamente
-  if (getApiKeyIA()) {
+  if (true) { // IA sempre disponível via servidor
     sugerirTermosIA(item);
   }
 }
@@ -3679,17 +3679,27 @@ async function executarBuscaOpcaoB() {
   // Se IA disponível, busca com múltiplos termos para mais cobertura
   const sugestoesEl = document.getElementById('ia-sugestoes');
   let queriesParaBuscar = [queryPrincipal];
-  if (getApiKeyIA() && sugestoesEl?.dataset?.termos) {
+  // Usa termos sugeridos pela IA (sempre disponível via servidor)
+  if (sugestoesEl?.dataset?.termos) {
     try {
       const termosIA = JSON.parse(sugestoesEl.dataset.termos);
-      // Adiciona termos da IA que sejam diferentes do principal (até 2 extras)
       for (const t of termosIA) {
         if (t && t !== queryPrincipal && !queriesParaBuscar.includes(t)) {
           queriesParaBuscar.push(t);
-          if (queriesParaBuscar.length >= 3) break;
+          if (queriesParaBuscar.length >= 5) break; // até 5 termos simultâneos
         }
       }
     } catch(e) {}
+  }
+  // Garante variações algorítmicas mesmo sem IA ter respondido
+  if (queriesParaBuscar.length < 3) {
+    const variacoes = gerarVariacoesQuery(queryPrincipal);
+    for (const v of variacoes) {
+      if (v && v !== queryPrincipal && !queriesParaBuscar.includes(v)) {
+        queriesParaBuscar.push(v);
+        if (queriesParaBuscar.length >= 5) break;
+      }
+    }
   }
 
   const btnBuscar = document.getElementById('btn-buscar');
@@ -3703,8 +3713,8 @@ async function executarBuscaOpcaoB() {
   ultimoErroFetch = null;
   _scoreCache.clear(); // 2d — limpa cache de scores
 
-  const MAX_CANDIDATAS = 100;
-  const MAX_PAGINAS = 5;
+  const MAX_CANDIDATAS = 150;
+  const MAX_PAGINAS = 8;
 
   const t0 = performance.now();
 
@@ -3743,8 +3753,19 @@ async function executarBuscaOpcaoB() {
             vistos.add(chave);
             // Só processa licitações com resultados cadastrados (tem_resultado: true)
             // Isso evita 404 em itens e acelera a busca
-            if (!c.tem_resultado) continue; // ignora licitações sem resultados/preços cadastrados
-            candidatas.push({ ...c, _score: calcularScorePonderado(query, c.description || c.title || ''), _tipoDoc: tipoDoc, _query: query });
+            if (!c.tem_resultado) continue; // sem preços cadastrados
+            if (c.cancelado) continue; // licitação cancelada
+            // Filtra situações inválidas (deserta, fracassada, revogada)
+            const situacaoNome = (c.situacao_nome || '').toLowerCase();
+            if (situacaoNome.includes('deserta') || situacaoNome.includes('fracass') || situacaoNome.includes('revog') || situacaoNome.includes('anulad')) continue;
+
+            // Calcula score com bônus para pregão eletrônico (mais confiável)
+            let score = calcularScorePonderado(query, c.description || c.title || '');
+            const modalidade = c.modalidade_licitacao_id;
+            if (modalidade === '6') score = Math.min(1, score * 1.15); // +15% pregão eletrônico
+            if (modalidade === '7') score = Math.min(1, score * 1.05); // +5% pregão presencial
+            if (modalidade === '8') score = Math.min(1, score * 0.95); // -5% dispensa
+            candidatas.push({ ...c, _score: score, _tipoDoc: tipoDoc, _query: query });
             if (candidatas.length >= MAX_CANDIDATAS) { acabou = true; break; }
           }
 
@@ -3755,6 +3776,33 @@ async function executarBuscaOpcaoB() {
     }
 
     const totalAnalisadas = vistos.size;
+
+    // Auto-expansão: se poucos resultados, tenta termo mais curto (1ª palavra)
+    if (candidatas.length < 3 && !state.busca.abortar) {
+      const palavras = queryPrincipal.split(' ').filter(p => p.length >= 3);
+      if (palavras.length > 1) {
+        const termoAmplo = palavras[0]; // palavra principal
+        if (!queriesParaBuscar.includes(termoAmplo)) {
+          atualizarProgresso(`Expandindo busca com "${termoAmplo}"...`, candidatas.length, candidatas.length);
+          for (const tipoDoc of ['edital', 'ata']) {
+            for (let pag = 1; pag <= 5 && candidatas.length < 10; pag++) {
+              try {
+                const resp = await buscarContratacoes(termoAmplo, uf, pag, tipoDoc, meses);
+                for (const c2 of (resp.items || [])) {
+                  if (!c2.tem_resultado || c2.cancelado) continue;
+                  const chave = c2.item_url || c2.numero_controle_pncp || '';
+                  if (vistos.has(chave)) continue;
+                  vistos.add(chave);
+                  const score = calcularScorePonderado(queryPrincipal, c2.description || c2.title || '') * 0.85;
+                  candidatas.push({ ...c2, _score: score, _tipoDoc: tipoDoc, _query: termoAmplo, _autoExpandido: true });
+                }
+                if ((resp.items || []).length < 50) break;
+              } catch(e) { break; }
+            }
+          }
+        }
+      }
+    }
 
     if (candidatas.length === 0) {
       document.getElementById('progress-area').classList.remove('show');
