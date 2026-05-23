@@ -3739,7 +3739,7 @@ function atualizarTipoAuto(descricao) {
 // Detecta tipo via IA (mais preciso para casos ambíguos)
 async function detectarTipoComIA(descricao) {
   try {
-    const prompt = \`Analise esta descrição de item de licitação e classifique em UMA categoria:
+    const prompt = `Analise esta descrição de item de licitação e classifique em UMA categoria:
 "${descricao.slice(0, 300)}"
 
 Categorias:
@@ -3747,7 +3747,7 @@ Categorias:
 - locacao: aluguel/locação de bem/veículo/equipamento
 - servico: prestação de serviço/manutenção/instalação/consultoria
 
-Responda APENAS com JSON: {"tipo": "aquisicao"} ou {"tipo": "locacao"} ou {"tipo": "servico"} ou {"tipo": "qualquer"}\`;
+Responda APENAS com JSON: {"tipo": "aquisicao"} ou {"tipo": "locacao"} ou {"tipo": "servico"} ou {"tipo": "qualquer"}`;
     
     const data = await chamarIA({ max_tokens: 50, temperature: 0, messages: [{ role: 'user', content: prompt }] });
     if (!data) return null;
